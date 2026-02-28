@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>😈單字測驗小遊戲</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --text-dark: #1a1a1a;
+            --primary: #0056b3;
+            --success: #1e7e34;
+            --danger: #bd2130;
+            --warning: #f39c12;
+            --border: #333333;
+            --edit-bg: #fff9c4;
+            --batch-bg: #e3f2fd;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: var(--text-dark); }
+        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); margin: auto; position: relative; }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+
+        h2 { border-bottom: 3px solid var(--primary); padding-bottom: 10px; margin-top: 0; color: var(--text-dark); text-align: center; }
+        p, label { font-weight: 800; color: #000; display: block; margin-bottom: 8px; }
+
+        button { 
+            width: 100%; padding: 16px; margin-bottom: 12px; border: 2px solid var(--border); 
+            border-radius: 12px; font-size: 18px; font-weight: 800; cursor: pointer;
+            background: #fff; color: var(--text-dark);
+        }
+        
+        .option-btn.correct { background: var(--success) !important; color: white !important; }
+        .option-btn.wrong { background: var(--danger) !important; color: white !important; }
+
+        input, textarea { 
+            width: 100%; padding: 14px; margin-bottom: 15px; border: 3px solid var(--border); 
+            border-radius: 8px; font-size: 18px; font-weight: bold; background: white; color: black;
+        }
+
+        #timer-display {
+            position: absolute; top: 40px; right: 25px; font-size: 24px; font-weight: 900;
+            color: var(--danger); background: #fff; padding: 5px 10px; border-radius: 8px;
+            border: 2px solid var(--danger); display: none; pointer-events: none; z-index: 10;
+        }
+
+        .quiz-word-container {
+            width: 100%; margin: 20px 0; min-height: 80px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; background: #f8f9fa; border-radius: 10px;
+        }
+        .quiz-word { font-size: 42px; color: var(--primary); font-weight: 900; word-break: break-all; }
+        .scaffold-text { font-size: 26px; color: var(--warning); letter-spacing: 4px; font-weight: bold; margin-top: 5px; }
+
+        .progress-bar { width: 100%; height: 12px; background: #ddd; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #999; }
+        #progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
+
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 2px solid #ccc; gap: 10px; }
+        .word-clickable { flex: 1; cursor: pointer; padding: 10px; border-radius: 8px; background: #fafafa; border: 1px solid #eee; }
+        .btn-del { width: auto; padding: 10px 15px; font-size: 14px; margin-bottom: 0; background: var(--danger); color: white; border: none; }
+        
+        #wrong-confirm-box { display: none; background: #fff5f5; border: 2px solid var(--danger); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
+
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ddd; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 18px; font-weight: bold; }
+        .wrong-list-area { background: #fff; border: 2px solid var(--danger); padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 16px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="timer-display">0</div>
+
+    <div id="p-main" class="page active">
+        <h2 style="font-size: 28px;">🎮all in one</h2>
+        <button style="background:var(--primary); color:white; border:none; padding: 20px;" onclick="go('p-mode')">開始遊戲</button>
+        <button onclick="go('p-mgr')">⚙️ 題庫管理 / 備份</button>
+    </div>
+
+    <div id="p-mode" class="page">
+        <h2>請選擇遊戲模式</h2>
+        <button style="border-color: var(--primary); color: var(--primary);" onclick="setGameMode('choice')">🅰️ 英翻中選擇</button>
+        <button style="border-color: var(--success); color: var(--success);" onclick="setGameMode('input')">✍️ 中翻英填充</button>
+        <button onclick="go('p-main')" style="margin-top: 10px; font-size: 14px;">返回主畫面</button>
+    </div>
+
+    <div id="p-sel" class="page">
+        <h2 id="sel-title-text">設定測驗</h2>
+        <div id="sel-list"></div>
+        <div id="quiz-config" style="display:none; margin-top:20px; border-top: 1px solid #eee; padding-top: 15px;">
+            <label>1. 測驗題數：</label>
+            <input type="number" id="quiz-num-input" min="1" inputmode="numeric">
+            
+            <label>2. 每題時間 (秒)：</label>
+            <input type="number" id="quiz-time-input" min="0" inputmode="numeric" value="10">
+
+            <div id="config-input-only" style="display:none;">
+                <label style="display: flex; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 8px;">
+                    <input type="checkbox" id="hint-toggle" style="width: auto; margin-right: 10px; margin-bottom: 0;"> 開啟首尾提示 (A_____e)
+                </label>
+            </div>
+
+            <p id="pool-info" style="font-size:14px; color:#555;"></p>
+            <button style="background:var(--success); color:white; border:none;" onclick="startQuiz()">確認開始！</button>
+        </div>
+        <button onclick="go('p-mode')" style="margin-top:10px;">返回</button>
+    </div>
+
+    <div id="p-quiz" class="page">
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <div id="q-info" style="text-align:center; font-weight:800; font-size:18px; margin-bottom: 10px;"></div>
+        
+        <div class="quiz-word-container">
+            <div class="quiz-word" id="q-word-display"></div>
+            <div id="q-hint-display" class="scaffold-text" style="display:none;"></div>
+        </div>
+
+        <div id="ui-choice" style="display:none;">
+            <div id="q-options-container"></div>
+            <div id="choice-next-box" style="display:none; margin-top: 10px;">
+                <button onclick="nextQ()" style="background:#000; color:#fff;">確認並繼續 ➔</button>
+            </div>
+        </div>
+
+        <div id="ui-input" style="display:none;">
+            <div id="wrong-confirm-box">
+                <div id="wrong-msg"></div>
+                <button onclick="nextQ(true)" style="background:var(--danger); color:white; border:none; margin-bottom:0;">我知道了，下一題</button>
+            </div>
+            <div id="input-zone">
+                <input type="text" id="ans-in" autocomplete="off" spellcheck="false" placeholder="請在此輸入英文答案">
+                <button onclick="checkInputAns()" style="background:var(--primary); color:white; border:none;">送出答案</button>
+            </div>
+        </div>
+
+        <button onclick="if(confirm('結束測驗？')) go('p-main')" style="margin-top:30px; font-size:14px; opacity:0.6; border:none;">結束遊戲</button>
+    </div>
+
+    <div id="p-result" class="page">
+        <h2>🎉 測驗完成</h2>
+        <div class="stat-card">
+            <div class="stat-row"><span>總題數：</span><span id="res-total">0</span></div>
+            <div class="stat-row"><span>答對數：</span><span id="res-correct" style="color:var(--success);">0</span></div>
+            <div class="stat-row"><span>答對率：</span><span id="res-rate">0%</span></div>
+        </div>
+        
+        <div id="res-wrong-section" style="display:none;">
+            <p style="color:var(--danger);">以下是答錯的單字 (可複製)：</p>
+            <div id="res-wrong-list" class="wrong-list-area"></div>
+            <button onclick="copyWrongList()" style="margin-top:10px; padding:10px; font-size:14px;">📋 一鍵複製錯題</button>
+        </div>
+
+        <button onclick="go('p-main')" style="background:var(--primary); color:white; border:none; margin-top:20px;">返回主選單</button>
+    </div>
+
+    <div id="p-mgr" class="page">
+        <h2>🗂 題庫管理</h2>
+        <input type="text" id="db-in" placeholder="輸入新題庫名稱">
+        <button onclick="addDB()" style="background:var(--primary); color:white; border:none;">建立新題庫</button>
+        <div id="db-list"></div>
+        <div style="margin-top:20px; padding:15px; border:2px dashed #ccc; text-align:center;">
+            <button onclick="exportJSON()" style="padding:10px; font-size:14px; margin-bottom:10px;">匯出備份 (.json)</button>
+            <input type="file" id="import-file" onchange="importJSON(event)" style="font-size:12px;">
+        </div>
+        <button onclick="go('p-main')">返回</button>
+    </div>
+
+    <div id="p-edit" class="page">
+        <h2 id="edit-title">編輯中</h2>
+        <div id="single-edit-area">
+            <input type="text" id="w-in" placeholder="英文單字">
+            <input type="text" id="m-in" placeholder="中文翻譯">
+            <input type="hidden" id="editing-idx" value="-1">
+            <button id="save-btn" onclick="saveWord()" style="background:var(--primary); color:white; border:none;">加入單字</button>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="openBatchUI('import')" style="font-size:13px; flex:1;">🚀 批次匯入</button>
+                <button onclick="openBatchUI('export')" style="font-size:13px; flex:1; color:var(--success); border-color:var(--success);">📤 批次匯出</button>
+            </div>
+        </div>
+
+        <div id="batch-edit-area" style="display:none; background:var(--batch-bg); padding:15px; border-radius:12px; margin-top:10px; border: 2px solid var(--primary);">
+            <h3 id="batch-title" style="margin-top:0;">批次處理</h3>
+            <textarea id="batch-input" rows="8" placeholder="格式：英文 中文 (每行一個)"></textarea>
+            <div id="batch-export-btns" style="display:none;">
+                <button onclick="copyBatchText()" style="background:#000; color:white; border:none;">一鍵複製全部</button>
+            </div>
+            <input type="hidden" id="current-batch-mode" value="">
+            <button onclick="handleBatchFinish()" style="background:var(--primary); color:white; border:none; margin-top:10px;">完成並儲存</button>
+            <button onclick="toggleBatch(false)" style="font-size:13px; background:none;">取消返回</button>
+        </div>
+
+        <div id="word-list-container" style="max-height:300px; overflow-y:auto; margin-top:15px; border:1px solid #eee;"></div>
+        <button onclick="go('p-mgr')" style="margin-top:10px;">離開編輯</button>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('pro_v_db_v3')) || {};
+    let currentDB = "";
+    let currentGameMode = ""; 
+    let quizQueue = [];
+    let currentIdx = 0;
+    let quizTimer = null;
+    
+    let correctCount = 0;
+    let wrongList = [];
+
+    function go(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        if(quizTimer) clearInterval(quizTimer);
+        document.getElementById('timer-display').style.display = 'none';
+        if(pageId === 'p-mgr') drawDBList();
+        if(pageId === 'p-sel') drawSelList();
+    }
+
+    function setGameMode(mode) {
+        currentGameMode = mode;
+        document.getElementById('sel-title-text').innerText = (mode === 'choice' ? '英翻中：設定' : '中翻英：設定');
+        document.getElementById('config-input-only').style.display = (mode === 'input' ? 'block' : 'none');
+        go('p-sel');
+    }
+
+    // --- 題庫與編輯邏輯 ---
+    function addDB() {
+        let name = document.getElementById('db-in').value.trim();
+        if(!name || db[name]) return alert("名稱無效或已存在");
+        db[name] = []; saveDB(); drawDBList();
+        document.getElementById('db-in').value = "";
+    }
+    function drawDBList() {
+        let html = '';
+        for(let n in db) {
+            html += `<div class="item">
+                <span onclick="openEdit('${n}')" style="color:var(--primary); font-weight:bold; cursor:pointer; flex:1;">📂 ${n} (${db[n].length})</span>
+                <button class="btn-del" style="background:#666;" onclick="renameDB('${n}')">名</button>
+                <button class="btn-del" onclick="if(confirm('刪除整個題庫？')){delete db['${n}']; saveDB(); drawDBList();}">刪</button>
+            </div>`;
+        }
+        document.getElementById('db-list').innerHTML = html;
+    }
+    function renameDB(old) {
+        let n = prompt("重命名題庫：", old);
+        if(n && n.trim() && !db[n]) { db[n] = db[old]; delete db[old]; saveDB(); drawDBList(); }
+    }
+    function saveDB() { localStorage.setItem('pro_v_db_v3', JSON.stringify(db)); }
+
+    function openEdit(n) {
+        currentDB = n;
+        document.getElementById('edit-title').innerText = n;
+        resetEdit(); drawWordList(); go('p-edit');
+    }
+    function resetEdit() {
+        document.getElementById('w-in').value = ""; document.getElementById('m-in').value = "";
+        document.getElementById('editing-idx').value = "-1";
+        document.getElementById('save-btn').innerText = "加入單字";
+        document.getElementById('save-btn').style.background = "var(--primary)";
+    }
+    function saveWord() {
+        let w = document.getElementById('w-in').value.trim();
+        let m = document.getElementById('m-in').value.trim();
+        let idx = parseInt(document.getElementById('editing-idx').value);
+        if(!w || !m) return alert("請填寫完整");
+        if(idx === -1) {
+            if(db[currentDB].some(i => i.w.toLowerCase() === w.toLowerCase() && i.m === m)) return alert("此單字組合已存在");
+            db[currentDB].push({w, m});
+        } else { db[currentDB][idx] = {w, m}; }
+        saveDB(); drawWordList(); resetEdit();
+    }
+    function drawWordList() {
+        let html = '';
+        db[currentDB].forEach((item, i) => {
+            html += `<div class="item">
+                <div class="word-clickable" onclick="triggerEditWord(${i})"><b>${item.w}</b><br><small>${item.m}</small></div>
+                <button class="btn-del" onclick="db['${currentDB}'].splice(${i},1); saveDB(); drawWordList();">X</button>
+            </div>`;
+        });
+        document.getElementById('word-list-container').innerHTML = html || '<p style="padding:20px; text-align:center; color:#999;">沒有單字</p>';
+    }
+    function triggerEditWord(i) {
+        let item = db[currentDB][i];
+        document.getElementById('w-in').value = item.w;
+        document.getElementById('m-in').value = item.m;
+        document.getElementById('editing-idx').value = i;
+        document.getElementById('save-btn').innerText = "更新單字";
+        document.getElementById('save-btn').style.background = "var(--warning)";
+    }
+
+    // --- 批次處理邏輯 ---
+    function toggleBatch(show) {
+        document.getElementById('single-edit-area').style.display = show ? 'none' : 'block';
+        document.getElementById('batch-edit-area').style.display = show ? 'block' : 'none';
+        document.getElementById('word-list-container').style.display = show ? 'none' : 'block';
+    }
+    function openBatchUI(mode) {
+        const area = document.getElementById('batch-input');
+        const title = document.getElementById('batch-title');
+        const exportBtns = document.getElementById('batch-export-btns');
+        document.getElementById('current-batch-mode').value = mode;
+        toggleBatch(true);
+        if(mode === 'export') {
+            title.innerText = "📤 批次匯出模式";
+            area.value = db[currentDB].map(i => `${i.w} ${i.m}`).join('\n');
+            exportBtns.style.display = 'block';
+        } else {
+            title.innerText = "🚀 批次匯入模式";
+            area.value = "";
+            exportBtns.style.display = 'none';
+        }
+    }
+    function copyBatchText() {
+        const area = document.getElementById('batch-input');
+        area.select(); document.execCommand('copy'); alert("已複製！");
+    }
+    function handleBatchFinish() {
+        const mode = document.getElementById('current-batch-mode').value;
+        if (mode === 'export') { toggleBatch(false); return; }
+        let txt = document.getElementById('batch-input').value.trim();
+        if(!txt) { toggleBatch(false); return; }
+        let lines = txt.split('\n');
+        let added = 0; let skipped = 0;
+        lines.forEach(line => {
+            let p = line.trim().split(/\s+/);
+            if(p.length >= 2) {
+                let w = p[0], m = p.slice(1).join(" ");
+                if(!db[currentDB].some(i => i.w.toLowerCase() === w.toLowerCase() && i.m === m)) {
+                    db[currentDB].push({w, m}); added++;
+                } else { skipped++; }
+            } else { skipped++; }
+        });
+        saveDB(); drawWordList(); toggleBatch(false);
+        alert(`🎯 批次處理完畢！新增：${added}，跳過：${skipped}`);
+    }
+
+    // --- 測驗邏輯 ---
+    function drawSelList() {
+        let html = '';
+        for(let n in db) {
+            html += `<button id="btn-sel-${n}" onclick="prepQuiz('${n}')">${n} (${db[n].length})</button>`;
+        }
+        document.getElementById('sel-list').innerHTML = html || '請先建立題庫';
+    }
+    function prepQuiz(n) {
+        currentDB = n;
+        document.querySelectorAll('#sel-list button').forEach(b => b.style.border = '2px solid #333');
+        document.getElementById('btn-sel-'+n).style.border = '5px solid black';
+        document.getElementById('quiz-config').style.display = 'block';
+        document.getElementById('quiz-num-input').value = db[n].length;
+        document.getElementById('pool-info').innerText = "上限：" + db[n].length + " 題";
+    }
+
+    function startQuiz() {
+        let pool = db[currentDB];
+        if(!pool || pool.length < 1) return alert("單字不夠");
+        if(currentGameMode === 'choice' && pool.length < 4) return alert("單字太少(需4個以上)");
+        let limit = parseInt(document.getElementById('quiz-num-input').value) || pool.length;
+        quizQueue = [...pool].sort(() => 0.5 - Math.random()).slice(0, limit);
+        currentIdx = 0;
+        correctCount = 0;
+        wrongList = [];
+        document.getElementById('ui-choice').style.display = (currentGameMode === 'choice' ? 'block' : 'none');
+        document.getElementById('ui-input').style.display = (currentGameMode === 'input' ? 'block' : 'none');
+        go('p-quiz');
+        renderNextQ();
+    }
+
+    function renderNextQ() {
+        if(quizTimer) clearInterval(quizTimer);
+        let q = quizQueue[currentIdx];
+        document.getElementById('q-info').innerText = `題目： ${currentIdx + 1} / ${quizQueue.length}`;
+        document.getElementById('progress-fill').style.width = ((currentIdx+1)/quizQueue.length * 100) + '%';
+        
+        // 統一調用計時器
+        startCountdown(q);
+
+        if(currentGameMode === 'choice') {
+            document.getElementById('q-word-display').innerText = q.w;
+            document.getElementById('q-hint-display').style.display = 'none';
+            setupChoiceUI(q);
+        } else {
+            document.getElementById('q-word-display').innerText = q.m;
+            setupInputUI(q);
+        }
+    }
+
+    // 統一計時函數
+    function startCountdown(q) {
+        let timeLimit = parseInt(document.getElementById('quiz-time-input').value) || 0;
+        if(timeLimit > 0) {
+            let left = timeLimit;
+            document.getElementById('timer-display').innerText = left;
+            document.getElementById('timer-display').style.display = 'block';
+            quizTimer = setInterval(() => {
+                left--;
+                document.getElementById('timer-display').innerText = left;
+                if(left <= 0) {
+                    clearInterval(quizTimer);
+                    handleTimeOut(q);
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-display').style.display = 'none';
+        }
+    }
+
+    function handleTimeOut(q) {
+        wrongList.push(q); // 時間到視為錯誤
+        if(currentGameMode === 'choice') {
+            revealChoiceCorrect(q.m);
+        } else {
+            // 中翻英時間到直接進入錯誤確認框
+            showInputWrongMsg();
+        }
+    }
+
+    function setupChoiceUI(q) {
+        document.getElementById('choice-next-box').style.display = 'none';
+        let allM = [...new Set(db[currentDB].map(i => i.m))];
+        let others = allM.filter(m => m !== q.m).sort(() => 0.5 - Math.random()).slice(0, 3);
+        let opts = [...others, q.m].sort(() => 0.5 - Math.random());
+        let html = '';
+        opts.forEach(o => {
+            html += `<button class="option-btn" onclick="checkChoiceAns(this, '${o.replace(/'/g, "\\'")}', '${q.m.replace(/'/g, "\\")}')">${o}</button>`;
+        });
+        document.getElementById('q-options-container').innerHTML = html;
+    }
+
+    function checkChoiceAns(btn, sel, cor) {
+        if(quizTimer) clearInterval(quizTimer);
+        document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+        if(sel === cor) {
+            btn.classList.add('correct');
+            confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
+            correctCount++;
+            setTimeout(nextQ, 800);
+        } else {
+            btn.classList.add('wrong');
+            wrongList.push(quizQueue[currentIdx]);
+            revealChoiceCorrect(cor);
+        }
+    }
+
+    function revealChoiceCorrect(cor) {
+        document.querySelectorAll('.option-btn').forEach(b => {
+            b.disabled = true;
+            if(b.innerText === cor) b.classList.add('correct');
+        });
+        document.getElementById('choice-next-box').style.display = 'block';
+    }
+
+    function setupInputUI(q) {
+        document.getElementById('wrong-confirm-box').style.display = 'none';
+        document.getElementById('input-zone').style.display = 'block';
+        const hintEl = document.getElementById('q-hint-display');
+        if(document.getElementById('hint-toggle').checked) {
+            let w = q.w.trim();
+            hintEl.innerText = `${w[0]}_____ ${w[w.length-1]}`;
+            hintEl.style.display = 'block';
+        } else { hintEl.style.display = 'none'; }
+        const inp = document.getElementById('ans-in');
+        inp.value = ""; inp.focus();
+        inp.onkeydown = (e) => { if(e.key === 'Enter') checkInputAns(); };
+    }
+
+    function checkInputAns() {
+        const inp = document.getElementById('ans-in');
+        let user = inp.value.trim().toLowerCase();
+        if(!user) return;
+        if(quizTimer) clearInterval(quizTimer);
+
+        let q = quizQueue[currentIdx];
+        let correctAnswers = db[currentDB].filter(i => i.m === q.m).map(i => i.w.toLowerCase());
+        if(correctAnswers.includes(user)) {
+            confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
+            correctCount++;
+            nextQ();
+        } else {
+            wrongList.push(q);
+            showInputWrongMsg();
+        }
+    }
+
+    function showInputWrongMsg() {
+        let q = quizQueue[currentIdx];
+        let correctAnswers = db[currentDB].filter(i => i.m === q.m).map(i => i.w.toLowerCase());
+        document.getElementById('input-zone').style.display = 'none';
+        document.getElementById('wrong-msg').innerHTML = `❌ 答錯了或超時！<br>正確答案是：<br><b style="font-size:24px;">${correctAnswers.join(' / ')}</b>`;
+        document.getElementById('wrong-confirm-box').style.display = 'block';
+    }
+
+    function nextQ(wasWrongConfirm = false) {
+        currentIdx++;
+        if(currentIdx < quizQueue.length) renderNextQ();
+        else { showResult(); }
+    }
+
+    function showResult() {
+        const total = quizQueue.length;
+        const rate = Math.round((correctCount / total) * 100);
+        document.getElementById('res-total').innerText = total;
+        document.getElementById('res-correct').innerText = correctCount;
+        document.getElementById('res-rate').innerText = rate + "%";
+        const wrongArea = document.getElementById('res-wrong-section');
+        const wrongListEl = document.getElementById('res-wrong-list');
+        if(wrongList.length > 0) {
+            wrongArea.style.display = 'block';
+            wrongListEl.innerText = [...new Set(wrongList.map(i => `${i.w} ${i.m}`))].join('\n');
+        } else {
+            wrongArea.style.display = 'none';
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        }
+        go('p-result');
+    }
+
+    function copyWrongList() {
+        const text = document.getElementById('res-wrong-list').innerText;
+        navigator.clipboard.writeText(text).then(() => alert("錯題已複製！"));
+    }
+
+    function exportJSON() {
+        const blob = new Blob([JSON.stringify(db)], {type: "application/json"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `備份_${new Date().toLocaleDateString()}.json`; a.click();
+    }
+    function importJSON(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                let data = JSON.parse(ev.target.result);
+                for(let k in data) {
+                    if(!db[k]) { db[k] = data[k]; }
+                    else {
+                        data[k].forEach(nw => {
+                            if(!db[k].some(ow => ow.w.toLowerCase() === nw.w.toLowerCase() && ow.m === nw.m)) {
+                                db[k].push(nw);
+                            }
+                        });
+                    }
+                }
+                saveDB(); drawDBList(); alert("導入成功！");
+            } catch(e) { alert("格式錯誤"); }
+        };
+        reader.readAsText(e.target.files[0]);
+    }
+
+    window.onload = () => { if(Object.keys(db).length > 0) drawDBList(); };
+</script>
+</body>
+</html>

@@ -391,6 +391,12 @@
     #page-record {
       padding-top: 14px;
     }
+    #page-record.active {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100dvh - var(--top-bar-h) - var(--nav-total-space));
+      padding-bottom: 16px;
+    }
     .mode-switch {
       position: relative;
       z-index: 95;
@@ -400,6 +406,7 @@
       border-radius: 8px;
       padding: 3px;
       margin-bottom: 12px;
+      flex-shrink: 0;
     }
     .mode-btn {
       flex: 1;
@@ -525,6 +532,12 @@
       pointer-events: none;
     }
 
+    .record-below-amount {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
     /* 當計算機開啟或剛收起的緩衝期間，鎖定下方區塊與日期選擇器，徹底防止穿透誤觸 */
     .record-below-amount.calc-locked,
     .record-below-amount.calc-locked * {
@@ -543,6 +556,7 @@
       margin-top: 10px;
       margin-bottom: 12px;
       position: relative;
+      flex-shrink: 0;
     }
     .date-picker-left {
       display: flex;
@@ -636,17 +650,37 @@
       border-color: var(--text);
     }
 
+    #expense-fields {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
     .expense-split-layout {
+      flex: 1;
       display: grid;
       grid-template-columns: 46% 1fr;
       gap: 12px;
       align-items: stretch;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
+      min-height: 220px;
     }
     @media (max-width: 340px) {
       .expense-split-layout {
         grid-template-columns: 1fr;
       }
+    }
+
+    .expense-left-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      gap: 12px;
+    }
+    .expense-left-col .form-group {
+      margin-bottom: 0;
     }
 
     .preset-panel {
@@ -657,12 +691,15 @@
       display: flex;
       flex-direction: column;
       height: 100%;
+      min-height: 0;
     }
     .preset-select-list {
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 176px;
+      min-height: 0;
+      max-height: max(220px, calc(100dvh - var(--top-bar-h) - var(--nav-total-space) - 295px));
       overflow-y: auto;
     }
     .preset-chip {
@@ -676,6 +713,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 6px;
+      flex-shrink: 0;
       transition: all 0.15s ease;
     }
     .preset-chip:active {
@@ -734,6 +772,8 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      flex-shrink: 0;
+      margin-top: auto;
       transition: opacity 0.15s ease, transform 0.1s ease;
     }
     .btn-submit:active {
@@ -1392,7 +1432,7 @@
       </div>
 
       <!-- 金額欄 -->
-      <div class="form-group" style="margin-bottom: 6px;">
+      <div class="form-group" style="margin-bottom: 6px; flex-shrink: 0;">
         <div class="form-label-row">
           <span class="form-label">金額</span>
         </div>
@@ -1426,7 +1466,7 @@
         <!-- 支出專屬欄位 -->
         <div id="expense-fields">
           <div class="expense-split-layout">
-            <div>
+            <div class="expense-left-col">
               <div class="form-group">
                 <div class="form-label-row">
                   <span class="form-label">選取類別</span>
@@ -1443,7 +1483,7 @@
                 <select id="select-payment" class="select-box"></select>
               </div>
 
-              <div class="form-group" style="margin-bottom:0;">
+              <div class="form-group">
                 <div class="form-label-row">
                   <span class="form-label">說明（選填）</span>
                 </div>
@@ -1463,7 +1503,7 @@
         </div>
 
         <!-- 收入專屬欄位 -->
-        <div id="income-fields" style="display:none; margin-bottom:16px;">
+        <div id="income-fields" style="display:none; flex:1; margin-bottom:16px;">
           <div class="form-group">
             <div class="form-label-row">
               <span class="form-label">說明（選填）</span>
@@ -1602,6 +1642,18 @@
     </div>
   </div>
 
+  <!-- 頁內提示與確認視窗（相容 PWA 與預覽環境） -->
+  <div id="app-dialog-modal" class="modal-overlay" style="z-index: 200;">
+    <div class="modal-box" style="max-width: 340px;">
+      <div id="app-dialog-title" class="modal-title" style="margin-bottom: 12px;">提示</div>
+      <div id="app-dialog-msg" style="font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-line; margin-bottom: 18px;"></div>
+      <div class="modal-actions">
+        <button type="button" id="app-dialog-cancel" class="btn-secondary" onclick="closeAppDialog(false)">取消</button>
+        <button type="button" id="app-dialog-ok" class="btn-primary" onclick="closeAppDialog(true)">確定</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'POCKET_LEDGER_GITHUB_V1';
     const HISTORY_STORAGE_KEY = 'POCKET_LEDGER_HISTORY_STACK_V1';
@@ -1653,6 +1705,30 @@
     ];
 
     const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
+
+    let appDialogCallback = null;
+    function showAppAlert(msg, title = '提示') {
+      document.getElementById('app-dialog-title').textContent = title;
+      document.getElementById('app-dialog-msg').textContent = msg;
+      document.getElementById('app-dialog-cancel').style.display = 'none';
+      document.getElementById('app-dialog-ok').textContent = '確定';
+      appDialogCallback = null;
+      document.getElementById('app-dialog-modal').classList.add('active');
+    }
+    function showAppConfirm(msg, onConfirm, title = '確認') {
+      document.getElementById('app-dialog-title').textContent = title;
+      document.getElementById('app-dialog-msg').textContent = msg;
+      document.getElementById('app-dialog-cancel').style.display = 'block';
+      document.getElementById('app-dialog-ok').textContent = '確定';
+      appDialogCallback = onConfirm;
+      document.getElementById('app-dialog-modal').classList.add('active');
+    }
+    function closeAppDialog(confirmed) {
+      document.getElementById('app-dialog-modal').classList.remove('active');
+      const cb = appDialogCallback;
+      appDialogCallback = null;
+      if (confirmed && typeof cb === 'function') cb();
+    }
 
     // ========= 日期與時間工具函式 =========
     function getTodayDateKey() {
@@ -2206,44 +2282,44 @@
           const source = (parsed && parsed.data && Array.isArray(parsed.data.logs)) ? parsed.data : parsed;
 
           if (!source || !Array.isArray(source.logs)) {
-            alert('匯入失敗：此檔案格式不正確，找不到記帳紀錄資料。');
+            showAppAlert('匯入失敗：此檔案格式不正確，找不到記帳紀錄資料。');
             return;
           }
 
           const logCount = source.logs.length;
-          const ok = confirm(
+          showAppConfirm(
             `確定要匯入「${file.name}」嗎？\n` +
-            `（內含 ${logCount} 筆紀錄，匯入後將覆蓋目前的分類、常用選項與所有記帳資料）`
+            `（內含 ${logCount} 筆紀錄，匯入後將覆蓋目前的分類、常用選項與所有記帳資料）`,
+            () => {
+              appState.categories = Array.isArray(source.categories) && source.categories.length > 0
+                ? source.categories
+                : ['餐飲', '娛樂（遊戲）', '娛樂（其他）', '網路'];
+              appState.payments = Array.isArray(source.payments) && source.payments.length > 0
+                ? source.payments
+                : ['現金', '悠遊卡', '行動支付', '銀行帳戶'];
+              appState.presets = Array.isArray(source.presets) ? source.presets : [];
+              appState.logs = source.logs;
+
+              selectedPresetIndex = null;
+
+              if (parsed && parsed.versionHistory && Array.isArray(parsed.versionHistory.stack) && parsed.versionHistory.stack.length > 0) {
+                historyStack = parsed.versionHistory.stack;
+                historyPointer = typeof parsed.versionHistory.pointer === 'number'
+                  ? Math.min(Math.max(0, parsed.versionHistory.pointer), historyStack.length - 1)
+                  : historyStack.length - 1;
+                applySnapshotObject(historyStack[historyPointer]);
+                persistToLocalStorage();
+                updateUndoRedoButtonsUI();
+              } else {
+                commitChangeWithVersion();
+              }
+
+              renderAll();
+              showAppAlert('已成功匯入並還原存檔狀態！');
+            }
           );
-          if (!ok) return;
-
-          appState.categories = Array.isArray(source.categories) && source.categories.length > 0
-            ? source.categories
-            : ['餐飲', '娛樂（遊戲）', '娛樂（其他）', '網路'];
-          appState.payments = Array.isArray(source.payments) && source.payments.length > 0
-            ? source.payments
-            : ['現金', '悠遊卡', '行動支付', '銀行帳戶'];
-          appState.presets = Array.isArray(source.presets) ? source.presets : [];
-          appState.logs = source.logs;
-
-          selectedPresetIndex = null;
-
-          if (parsed && parsed.versionHistory && Array.isArray(parsed.versionHistory.stack) && parsed.versionHistory.stack.length > 0) {
-            historyStack = parsed.versionHistory.stack;
-            historyPointer = typeof parsed.versionHistory.pointer === 'number'
-              ? Math.min(Math.max(0, parsed.versionHistory.pointer), historyStack.length - 1)
-              : historyStack.length - 1;
-            applySnapshotObject(historyStack[historyPointer]);
-            persistToLocalStorage();
-            updateUndoRedoButtonsUI();
-          } else {
-            commitChangeWithVersion();
-          }
-
-          renderAll();
-          alert('已成功匯入並還原存檔狀態！');
         } catch (err) {
-          alert('匯入失敗：無法解析檔案內容，請確認選擇的是正確的 .json 備份檔。');
+          showAppAlert('匯入失敗：無法解析檔案內容，請確認選擇的是正確的 .json 備份檔。');
         }
       };
       reader.readAsText(file, 'UTF-8');
@@ -2309,7 +2385,7 @@
       if (mode === '支出') {
         btnExp.classList.add('active');
         btnInc.classList.remove('active');
-        expFields.style.display = 'block';
+        expFields.style.display = 'flex';
         incFields.style.display = 'none';
       } else {
         btnInc.classList.add('active');
@@ -2674,7 +2750,7 @@
       closeCalcKeyboard();
       const amount = Math.abs(Number(computeExpressionValue(calcInput)) || 0);
       if (!amount || amount <= 0) {
-        alert('請輸入大於 0 的金額');
+        showAppAlert('請輸入大於 0 的金額');
         return;
       }
 
@@ -2723,25 +2799,27 @@
     }
 
     function handleClear() {
-      const ok = confirm('確定要重置嗎？\n這會將目前的「可用餘額」與「本輪預算」歸零，並開始新一輪的計算。');
-      if (!ok) return;
+      showAppConfirm(
+        '確定要重置嗎？\n這會將目前的「可用餘額」與「本輪預算」歸零，並開始新一輪的計算。',
+        () => {
+          closeCalcKeyboard();
+          appState.logs.unshift({
+            id: 'log_' + Date.now() + '_clear',
+            seq: getNextSeqNumber(),
+            date: getNowFormattedString(),
+            type: '清空',
+            amount: 0,
+            categoryOrNote: '歸零重置',
+            payment: '',
+            remaining: 0,
+            total: 0,
+            memo: ''
+          });
 
-      closeCalcKeyboard();
-      appState.logs.unshift({
-        id: 'log_' + Date.now() + '_clear',
-        seq: getNextSeqNumber(),
-        date: getNowFormattedString(),
-        type: '清空',
-        amount: 0,
-        categoryOrNote: '歸零重置',
-        payment: '',
-        remaining: 0,
-        total: 0,
-        memo: ''
-      });
-
-      commitChangeWithVersion();
-      renderAll();
+          commitChangeWithVersion();
+          renderAll();
+        }
+      );
     }
 
     function deleteLogById(logId) {
@@ -3056,7 +3134,7 @@
     function deleteOptionItem(index) {
       const defaultProtectedName = (currentEditingType === 'category') ? '餐飲' : '現金';
       if (tempModalItems[index].originalName === defaultProtectedName) {
-        alert(`「${defaultProtectedName}」為系統固定預設項目，無法刪除`);
+        showAppAlert(`「${defaultProtectedName}」為系統固定預設項目，無法刪除`);
         return;
       }
       tempModalItems.splice(index, 1);
@@ -3240,11 +3318,11 @@
       const amount = Math.abs(Number(document.getElementById('preset-input-amount').value) || 0);
 
       if (!name) {
-        alert('請填寫常用選項名稱');
+        showAppAlert('請填寫常用選項名稱');
         return;
       }
       if (!amount || amount <= 0) {
-        alert('請填寫大於 0 的金額');
+        showAppAlert('請填寫大於 0 的金額');
         return;
       }
 
@@ -3258,7 +3336,7 @@
       });
 
       if (isDuplicate) {
-        alert(`已存在完全相同的常用選項：\n「${name}（${category}・${amount.toLocaleString()} 元）」\n請勿重複新增！`);
+        showAppAlert(`已存在完全相同的常用選項：\n「${name}（${category}・${amount.toLocaleString()} 元）」\n請勿重複新增！`);
         return;
       }
 

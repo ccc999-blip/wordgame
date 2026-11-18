@@ -30,6 +30,7 @@
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      touch-action: manipulation;
     }
     input, select, textarea {
       user-select: auto;
@@ -63,7 +64,7 @@
       pointer-events: none;
     }
 
-    /* 頂部極簡標題列（再往下一點點，完全離開頂部玻璃化區域） */
+    /* 頂部極簡標題列 */
     .top-bar {
       padding-top: calc(env(safe-area-inset-top, 20px) + 30px);
       padding-bottom: 12px;
@@ -77,6 +78,8 @@
       border-bottom: 1px solid var(--border);
       background-color: var(--bg);
       gap: 8px;
+      position: relative;
+      z-index: 95;
     }
     .page-title-wrap {
       display: flex;
@@ -173,36 +176,38 @@
     }
     .page {
       display: none;
-      animation: fadeIn 0.2s ease;
     }
     .page.active {
       display: block;
     }
-    /* 概覽頁專用：讓圖表長方體在「上方橫線」與「下方導航列」之間上下等距置中 */
+    /* 概覽頁專用：全高彈性分佈，上半部中幅拉高且三行等距，下半部長方體在橫桿與導航列間完美置中 */
     #page-overview.active {
       display: flex;
       flex-direction: column;
       min-height: calc(100dvh - var(--top-bar-h) - var(--nav-total-space));
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(2px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
 
-    /* ========= 1. 概覽頁 ========= */
+    /* ========= 1. 概覽頁（橫桿中幅下移 + 上方三行等距分散 + 下方長方體持續置中） ========= */
     .balance-box {
-      padding: 18px 0 20px 0;
+      /* 中幅下移橫桿：給予上半部充裕高度，並讓內部三行與上下邊界等距分佈 */
+      min-height: 186px;
+      padding: 24px 0;
       border-bottom: 1px solid var(--border);
       text-align: left;
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
     }
     .balance-label {
       font-size: 12px;
       letter-spacing: 1px;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 11px;
+      margin: 0;
       font-weight: 500;
+      line-height: 1.2;
     }
     .balance-numbers {
       display: flex;
@@ -210,13 +215,14 @@
       gap: 8px;
       font-variant-numeric: tabular-nums;
       flex-wrap: wrap;
+      margin: 0;
     }
     .balance-rem {
-      font-size: 40px;
+      font-size: 42px;
       font-weight: 700;
       color: var(--income);
       letter-spacing: -1px;
-      line-height: 1.1;
+      line-height: 1;
     }
     .balance-rem.negative {
       color: var(--expense);
@@ -234,13 +240,13 @@
     }
 
     .today-spend-row {
-      margin-top: 15px;
+      margin: 0;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       background: var(--surface-sub);
       border: 1px solid var(--border);
-      padding: 5px 11px;
+      padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -269,33 +275,33 @@
       margin-left: -2px;
     }
 
-    /* 概覽中間圖表容器：透過 flex: 1 與 align-items: center 讓長方體上下間距完全相等 */
+    /* 概覽中間圖表容器：在「下移後的橫桿」與「底部切換類別欄」之間 1:1 垂直置中 */
     .overview-middle-wrap {
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 14px 0;
+      padding: 12px 0;
     }
     .section-block {
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 20px 18px 22px 18px;
+      padding: 18px 18px 20px 18px;
       margin: auto 0;
     }
 
     .main-burn-block {
-      padding-bottom: 16px;
+      padding-bottom: 15px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 16px;
+      margin-bottom: 15px;
     }
     .main-burn-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 10px;
+      margin-bottom: 9px;
     }
     .main-burn-title {
       font-size: 13px;
@@ -364,12 +370,12 @@
       font-weight: 500;
       color: var(--muted);
       letter-spacing: 0.5px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .compact-pie-box {
       position: relative;
       width: 100%;
-      height: 184px;
+      height: 172px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -384,11 +390,14 @@
       padding: 24px 0 8px 0;
     }
 
-    /* ========= 2. 記帳頁（新增日期選擇列 + 計算機觸發欄位 + 緊湊一屏控制） ========= */
+    /* ========= 2. 記帳頁 ========= */
     #page-record {
       padding-top: 14px;
     }
+    /* 讓支出/收入切換鈕層級高於計算機，點選切換時絕不關閉計算機 */
     .mode-switch {
+      position: relative;
+      z-index: 95;
       display: flex;
       background: var(--surface-sub);
       border: 1px solid var(--border);
@@ -456,40 +465,55 @@
       color: var(--text);
     }
 
-    /* 金額顯示框（點擊喚出內建計算機鍵盤） */
+    /* 金額顯示框（固定高度，確保點擊計算機時頁面 0 位移、不跳動） */
     .amount-input-wrapper {
       position: relative;
+      z-index: 95;
+      height: 58px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       border-bottom: 1.5px solid var(--border-dark);
-      padding: 2px 36px 5px 36px;
+      padding: 2px 38px 4px 38px;
       margin-bottom: 2px;
       cursor: pointer;
       transition: border-color 0.2s ease, background-color 0.15s ease;
       border-radius: 6px 6px 0 0;
+      overflow: hidden;
     }
     .amount-input-wrapper.calc-open {
       border-bottom-color: var(--text);
       background-color: rgba(239, 236, 230, 0.45);
     }
     .calc-expr-preview {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 500;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
-      min-height: 16px;
-      letter-spacing: 0.5px;
+      height: 15px;
+      line-height: 15px;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
     .amount-display-val {
-      font-size: 34px;
+      font-size: 32px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.5px;
       color: var(--text);
-      line-height: 1.15;
-      min-height: 39px;
+      height: 36px;
+      line-height: 36px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .amount-display-val.long-expr {
+      font-size: 24px;
     }
     .amount-display-val.placeholder {
       color: var(--muted-light);
@@ -498,14 +522,14 @@
     .amount-unit {
       position: absolute;
       right: 8px;
-      bottom: 9px;
+      bottom: 8px;
       font-size: 15px;
       font-weight: 500;
       color: var(--muted);
       pointer-events: none;
     }
 
-    /* 新增：金額與下方類別之間的「選擇日期」極簡區塊 */
+    /* 選擇日期區塊 */
     .date-picker-bar {
       display: flex;
       justify-content: space-between;
@@ -560,7 +584,6 @@
       padding: 1px 6px;
       border-radius: 4px;
     }
-    /* 透明覆蓋的原生日期選擇器，點擊整條日期列即可直接拉出 iOS 滾輪選年月日 */
     .native-date-input {
       position: absolute;
       inset: 0;
@@ -716,7 +739,7 @@
       transform: scale(0.99);
     }
 
-    /* ========= 3. 紀錄頁（支援左滑出現刪除鍵 / 拉到底直接刪除） ========= */
+    /* ========= 3. 紀錄頁 ========= */
     #page-history {
       padding-top: 12px;
     }
@@ -738,7 +761,6 @@
       margin: 8px 0;
       border-radius: 6px;
     }
-    /* 左滑底層：古銅深褐刪除槽 */
     .swipe-delete-bg {
       position: absolute;
       top: 0;
@@ -885,7 +907,7 @@
       margin-left: 3px;
     }
 
-    /* ========= 底部固定浮動膠囊導航列（移至先前位置與底部的中間） ========= */
+    /* ========= 底部固定浮動膠囊導航列 ========= */
     .bottom-nav-wrap {
       position: fixed;
       bottom: var(--nav-bottom);
@@ -928,108 +950,88 @@
       color: var(--surface);
     }
 
-    /* ========= 內建日系極簡計算機鍵盤 ========= */
-    .calc-sheet-backdrop {
-      position: fixed;
-      inset: 0;
-      background: transparent;
-      z-index: 85;
-      display: none;
-    }
-    .calc-sheet-backdrop.active {
-      display: block;
-    }
+    /* ========= 重新設計的計算機鍵盤（上緣對齊金額欄下方橫線、全比例放大按鍵、不跳動） ========= */
     .calc-keyboard {
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
+      /* top 由 JS 動態對齊金額欄底線 */
       z-index: 90;
       background: var(--bg);
-      border-top: 1px solid var(--border-dark);
-      border-radius: 16px 16px 0 0;
-      padding: 10px 16px calc(env(safe-area-inset-bottom, 12px) + 12px) 16px;
+      padding: 12px 20px calc(env(safe-area-inset-bottom, 12px) + 14px) 20px;
       max-width: 520px;
       margin: 0 auto;
-      transform: translateY(105%);
-      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 -4px 20px rgba(44, 44, 42, 0.08);
+      display: none;
+      flex-direction: column;
     }
     .calc-keyboard.active {
-      transform: translateY(0);
-    }
-    .calc-top-bar {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      padding: 0 2px;
     }
-    .calc-top-expr {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    /* 左侧 3x4 (789 / 456 / 123 / AC 0 .) + 右側 1x6 (完成 ÷ × − + ⌫)，高度 100% 隨畫面比例填滿 */
+    .calc-body {
       flex: 1;
-    }
-    .btn-calc-done {
-      background: var(--text);
-      color: var(--surface);
-      border: none;
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-    }
-    .calc-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 7px;
+      grid-template-columns: 3fr 1fr;
+      gap: 10px;
+      width: 100%;
+      height: 100%;
+    }
+    .calc-left-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .calc-right-ops {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(6, 1fr);
+      gap: 8px;
     }
     .calc-key {
-      height: 46px;
-      border-radius: 8px;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
-      font-size: 19px;
+      font-size: 24px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.1s ease;
+      transition: background-color 0.1s ease, transform 0.08s ease;
     }
     .calc-key:active {
       background: var(--surface-sub);
-      transform: scale(0.96);
+      transform: scale(0.97);
     }
-    .calc-key.func {
+    .calc-key.ac-key {
       background: var(--surface-sub);
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .calc-key.func:disabled {
-      opacity: 0.35;
+      color: var(--expense);
+      font-size: 20px;
+      font-weight: 700;
     }
     .calc-key.op {
       background: var(--surface-sub);
       color: var(--expense);
-      font-size: 21px;
+      font-size: 22px;
       font-weight: 600;
     }
-    .calc-key.eq {
+    .calc-key.del-x {
+      background: var(--surface-sub);
+      color: var(--text);
+    }
+    .calc-key.done-eq {
       background: var(--text);
       color: var(--surface);
       border-color: var(--text);
-      font-size: 19px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
 
     /* ========= iOS 風格底部滑出抽屜（每日支出總覽 Bottom Sheet） ========= */
@@ -1305,7 +1307,7 @@
         </button>
       </div>
 
-      <!-- 紀錄頁專屬顯示：回到上一步 + 回到下一步（純線條向量圖示，無 Emoji） -->
+      <!-- 紀錄頁專屬顯示：回到上一步 + 回到下一步 -->
       <div id="top-history-group" class="top-btn-group" style="display:none;">
         <button id="btn-undo-step" class="btn-top-tool btn-top-icon-only" onclick="handleUndoStep()" title="回到上一步" disabled>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1334,6 +1336,7 @@
   <main class="container">
     <!-- 1. 概覽頁 (預設) -->
     <div id="page-overview" class="page active">
+      <!-- 橫桿中幅下移，上方三行等距分散於橫桿之上 -->
       <div class="balance-box">
         <div class="balance-label">可用餘額 / 本輪預算</div>
         <div class="balance-numbers">
@@ -1341,7 +1344,6 @@
           <span class="balance-sep">/</span>
           <span id="overview-tot" class="balance-tot">0 元</span>
         </div>
-        <!-- 今日花費小標籤 -->
         <div class="today-spend-row" onclick="openDailySpendSheet()" title="點擊查看每日支出明細">
           <span class="today-spend-label">今日支出</span>
           <span id="overview-today" class="today-spend-val">0 元</span>
@@ -1353,7 +1355,7 @@
         </div>
       </div>
 
-      <!-- 中間彈性容器：確保圖表方塊與上方橫線、下方導航列距離完全相等 -->
+      <!-- 下方長方體持續維持在橫桿與導航列之間置中 -->
       <div class="overview-middle-wrap">
         <div class="section-block">
           <div class="main-burn-block">
@@ -1381,11 +1383,11 @@
     <!-- 2. 記帳頁 -->
     <div id="page-record" class="page">
       <div class="mode-switch">
-        <button id="btn-mode-exp" class="mode-btn active expense" onclick="setMode('支出')">支出</button>
-        <button id="btn-mode-inc" class="mode-btn income" onclick="setMode('收入')">收入</button>
+        <button type="button" id="btn-mode-exp" class="mode-btn active expense" onclick="setMode('支出')">支出</button>
+        <button type="button" id="btn-mode-inc" class="mode-btn income" onclick="setMode('收入')">收入</button>
       </div>
 
-      <!-- 金額欄（點擊開啟自製計算機鍵盤，切換收支時狀態不消失） -->
+      <!-- 金額欄（點擊開啟對齊底線的拉高計算機鍵盤，切換收支時鍵盤與算式常駐） -->
       <div class="form-group" style="margin-bottom: 6px;">
         <div class="form-label-row">
           <span class="form-label">金額</span>
@@ -1397,7 +1399,7 @@
         </div>
       </div>
 
-      <!-- 選擇日期列（預設今日，僅選年月日，切換收支時保留已選日期） -->
+      <!-- 選擇日期列 -->
       <div class="date-picker-bar">
         <div class="date-picker-left">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1439,7 +1441,7 @@
               <div class="form-label-row">
                 <span class="form-label">說明（選填）</span>
               </div>
-              <input type="text" id="input-expense-memo" class="input-boxed" placeholder="標記用途..." onfocus="closeCalcKeyboard()">
+              <input type="text" id="input-expense-memo" class="input-boxed" placeholder="標記用途...">
             </div>
           </div>
 
@@ -1460,11 +1462,11 @@
           <div class="form-label-row">
             <span class="form-label">說明（選填）</span>
           </div>
-          <input type="text" id="input-note" class="input-boxed" placeholder="例如：每週預算、零用錢" onfocus="closeCalcKeyboard()">
+          <input type="text" id="input-note" class="input-boxed" placeholder="例如：每週預算、零用錢">
         </div>
       </div>
 
-      <button class="btn-submit" onclick="submitRecord()">確認送出</button>
+      <button type="button" class="btn-submit" onclick="submitRecord()">確認送出</button>
     </div>
 
     <!-- 3. 紀錄頁 -->
@@ -1476,50 +1478,49 @@
   <!-- 底部固定浮動膠囊導航列 -->
   <nav class="bottom-nav-wrap">
     <div class="bottom-nav">
-      <button class="nav-tab active" onclick="switchTab('overview', this)">概覽</button>
-      <button class="nav-tab" onclick="switchTab('record', this)">記帳</button>
-      <button class="nav-tab" onclick="switchTab('history', this)">紀錄</button>
+      <button type="button" class="nav-tab active" onclick="switchTab('overview', this)">概覽</button>
+      <button type="button" class="nav-tab" onclick="switchTab('record', this)">記帳</button>
+      <button type="button" class="nav-tab" onclick="switchTab('history', this)">紀錄</button>
     </div>
   </nav>
 
-  <!-- 內建日系計算機鍵盤 -->
-  <div id="calc-backdrop" class="calc-sheet-backdrop" onclick="closeCalcKeyboard()"></div>
+  <!-- 重新設計的拉高版計算機鍵盤（上緣直接對齊金額欄下方橫線，按鍵等比例放大） -->
   <div id="calc-keyboard" class="calc-keyboard">
-    <div class="calc-top-bar">
-      <span id="calc-sheet-expr" class="calc-top-expr">輸入金額或算式</span>
-      <button type="button" class="btn-calc-done" onclick="closeCalcKeyboard()">完成</button>
-    </div>
-    <div class="calc-grid">
-      <button type="button" class="calc-key func" onclick="calcKeyClear()">AC</button>
-      <button type="button" id="btn-calc-prev" class="calc-key func" onclick="calcKeyPrevStep()" disabled>上個算式</button>
-      <button type="button" class="calc-key func" onclick="calcKeyBackspace()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
-          <line x1="18" y1="9" x2="12" y2="15"></line>
-          <line x1="12" y1="9" x2="18" y2="15"></line>
-        </svg>
-      </button>
-      <button type="button" class="calc-key op" onclick="calcKeyInput('÷')">÷</button>
+    <div class="calc-body">
+      <!-- 左側 3x4 九宮格數字 + AC（取代00） + 0 + . -->
+      <div class="calc-left-pad">
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '7')">7</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '8')">8</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '9')">9</button>
 
-      <button type="button" class="calc-key" onclick="calcKeyInput('7')">7</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('8')">8</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('9')">9</button>
-      <button type="button" class="calc-key op" onclick="calcKeyInput('×')">×</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '4')">4</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '5')">5</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '6')">6</button>
 
-      <button type="button" class="calc-key" onclick="calcKeyInput('4')">4</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('5')">5</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('6')">6</button>
-      <button type="button" class="calc-key op" onclick="calcKeyInput('-')">−</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '1')">1</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '2')">2</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '3')">3</button>
 
-      <button type="button" class="calc-key" onclick="calcKeyInput('1')">1</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('2')">2</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('3')">3</button>
-      <button type="button" class="calc-key op" onclick="calcKeyInput('+')">+</button>
+        <button type="button" class="calc-key ac-key" onpointerdown="handleCalcPad(event, 'AC')">AC</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '0')">0</button>
+        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '.')">.</button>
+      </div>
 
-      <button type="button" class="calc-key" onclick="calcKeyInput('00')">00</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('0')">0</button>
-      <button type="button" class="calc-key" onclick="calcKeyInput('.')">.</button>
-      <button type="button" class="calc-key eq" onclick="calcKeyEquals()">=</button>
+      <!-- 右側運算列：完成(放大同尺寸) + ÷ × − + + 退格叉叉鍵(取代原本的=) -->
+      <div class="calc-right-ops">
+        <button type="button" id="btn-calc-done-eq" class="calc-key done-eq" onpointerdown="handleCalcPad(event, 'DONE_EQ')">完成</button>
+        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '÷')">÷</button>
+        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '×')">×</button>
+        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '-')">−</button>
+        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '+')">+</button>
+        <button type="button" class="calc-key del-x" onpointerdown="handleCalcPad(event, 'BACK')" title="刪除數字">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+            <line x1="18" y1="9" x2="12" y2="15"></line>
+            <line x1="12" y1="9" x2="18" y2="15"></line>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1612,7 +1613,6 @@
       logs: []
     };
 
-    // 版本控制堆疊（跨重整、跨匯出匯入永久有效）
     let historyStack = [];
     let historyPointer = -1;
 
@@ -1626,10 +1626,9 @@
     let tempPresets = [];
     let editingPresetIdx = -1;
 
-    // 內建計算機狀態（切換支出/收入時完整保留）
-    let calcExpr = '';
-    let calcResult = 0;
-    let calcHistoryStack = [];
+    // 計算機狀態：calcInput 為目前打在金額欄上的字串（打完才計算），calcLastFormula 為上一段算完留存的算式小字
+    let calcInput = '';
+    let calcLastFormula = '';
 
     const TAB_TITLES = {
       overview: { zh: '概覽', en: 'Overview' },
@@ -1729,27 +1728,53 @@
       }
     }
 
-    // ========= 內建計算機鍵盤邏輯 =========
+    // ========= 全新拉高版計算機鍵盤邏輯（打在金額欄上、打完才算、絕不跳動） =========
+    function alignCalcKeyboardToAmountLine() {
+      const amountBox = document.getElementById('amount-box');
+      const kb = document.getElementById('calc-keyboard');
+      if (!amountBox || !kb) return;
+      const rect = amountBox.getBoundingClientRect();
+      // 將計算機鍵盤的上緣直接對齊金額欄下方的橫線
+      kb.style.top = Math.round(rect.bottom) + 'px';
+    }
+
     function openCalcKeyboard() {
-      document.getElementById('calc-backdrop').classList.add('active');
-      document.getElementById('calc-keyboard').classList.add('active');
-      document.getElementById('amount-box').classList.add('calc-open');
-      updateCalcUI();
+      window.scrollTo(0, 0);
+      const kb = document.getElementById('calc-keyboard');
+      const amountBox = document.getElementById('amount-box');
+      amountBox.classList.add('calc-open');
+      kb.classList.add('active');
+      alignCalcKeyboardToAmountLine();
+      updateCalcDisplay();
     }
 
     function closeCalcKeyboard() {
-      document.getElementById('calc-backdrop').classList.remove('active');
+      // 關閉鍵盤時，若有未結算的算式，自動幫使用者算出最終結果
+      if (hasPendingOperator(calcInput)) {
+        evaluateCurrentExpression();
+      }
       document.getElementById('calc-keyboard').classList.remove('active');
       document.getElementById('amount-box').classList.remove('calc-open');
+      updateCalcDisplay();
     }
 
-    function safeEvaluateCalc(expr) {
+    window.addEventListener('resize', function() {
+      const kb = document.getElementById('calc-keyboard');
+      if (kb && kb.classList.contains('active')) {
+        alignCalcKeyboardToAmountLine();
+      }
+    });
+
+    function hasPendingOperator(str) {
+      return /[+\-×÷]/.test(String(str || ''));
+    }
+
+    function computeExpressionValue(expr) {
       if (!expr) return 0;
       let clean = String(expr)
         .replace(/×/g, '*')
         .replace(/÷/g, '/')
         .replace(/−/g, '-');
-      // 若結尾是運算子，先去掉結尾運算子再即時算出目前數值
       clean = clean.replace(/[+\-*/.]+$/, '');
       if (!clean) return 0;
       if (!/^[0-9+\-*/.() ]+$/.test(clean)) return 0;
@@ -1762,114 +1787,139 @@
       return 0;
     }
 
-    function pushCalcStepSnapshot() {
-      if (calcHistoryStack.length === 0 || calcHistoryStack[calcHistoryStack.length - 1] !== calcExpr) {
-        calcHistoryStack.push(calcExpr);
-        if (calcHistoryStack.length > 30) calcHistoryStack.shift();
+    function evaluateCurrentExpression() {
+      if (!calcInput) return 0;
+      const cleanExpr = String(calcInput).replace(/[+\-×÷.]+$/, '');
+      const val = computeExpressionValue(cleanExpr);
+      if (hasPendingOperator(cleanExpr)) {
+        calcLastFormula = cleanExpr + ' =';
       }
-      updateCalcPrevBtnState();
+      calcInput = val > 0 ? String(val) : '';
+      return val;
     }
 
-    function updateCalcPrevBtnState() {
-      const btn = document.getElementById('btn-calc-prev');
-      if (btn) btn.disabled = (calcHistoryStack.length === 0);
+    function formatCalcInputForDisplay(raw) {
+      if (!raw) return '0';
+      // 將算式中的每段純數字加上千分位逗號，運算子維持原樣直接顯示在金額欄上
+      return String(raw).replace(/\d+(\.\d+)?/g, function(numStr) {
+        const parts = numStr.split('.');
+        const intFormatted = Number(parts[0]).toLocaleString();
+        return parts.length > 1 ? `${intFormatted}.${parts[1]}` : intFormatted;
+      });
     }
 
-    function calcKeyInput(ch) {
+    function updateCalcDisplay() {
+      const previewEl = document.getElementById('calc-expr-preview');
+      const displayEl = document.getElementById('amount-display-val');
+      const doneEqBtn = document.getElementById('btn-calc-done-eq');
+
+      previewEl.textContent = calcLastFormula || '';
+
+      if (!calcInput) {
+        displayEl.textContent = '0';
+        displayEl.classList.add('placeholder');
+        displayEl.classList.remove('long-expr');
+      } else {
+        const formatted = formatCalcInputForDisplay(calcInput);
+        displayEl.textContent = formatted;
+        displayEl.classList.remove('placeholder');
+        if (formatted.length > 11) {
+          displayEl.classList.add('long-expr');
+        } else {
+          displayEl.classList.remove('long-expr');
+        }
+      }
+
+      // 若目前算式含有加減乘除且結尾是數字，右上鍵顯示「=」讓使用者一鍵算出；否則顯示「完成」收起鍵盤
+      if (doneEqBtn) {
+        const isReadyToEqual = hasPendingOperator(calcInput) && /\d$/.test(calcInput);
+        doneEqBtn.textContent = isReadyToEqual ? '=' : '完成';
+      }
+    }
+
+    function handleCalcPad(e, key) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
       const ops = ['+', '-', '×', '÷'];
-      const isOp = ops.includes(ch);
 
-      if (!calcExpr && isOp) return;
-      if (!calcExpr && (ch === '0' || ch === '00')) {
-        calcExpr = '0';
-        updateCalcUI();
+      if (key === 'AC') {
+        clearPresetSelectionHighlight();
+        calcInput = '';
+        calcLastFormula = '';
+        updateCalcDisplay();
         return;
       }
 
-      pushCalcStepSnapshot();
-      clearPresetSelectionHighlight();
-
-      const lastChar = calcExpr.slice(-1);
-      if (isOp && ops.includes(lastChar)) {
-        calcExpr = calcExpr.slice(0, -1) + ch;
-      } else if (ch === '.') {
-        const parts = calcExpr.split(/[+\-×÷]/);
-        const currentNum = parts[parts.length - 1];
-        if (!currentNum.includes('.')) {
-          calcExpr += (currentNum === '' ? '0.' : '.');
-        }
-      } else {
-        if (calcExpr === '0' && !isOp && ch !== '.') {
-          calcExpr = (ch === '00') ? '0' : ch;
+      if (key === 'BACK') {
+        clearPresetSelectionHighlight();
+        if (calcInput.length > 0) {
+          calcInput = calcInput.slice(0, -1);
         } else {
-          calcExpr += ch;
+          calcLastFormula = '';
         }
+        updateCalcDisplay();
+        return;
       }
-      updateCalcUI();
-    }
 
-    function calcKeyBackspace() {
-      if (!calcExpr) return;
-      pushCalcStepSnapshot();
-      clearPresetSelectionHighlight();
-      calcExpr = calcExpr.slice(0, -1);
-      updateCalcUI();
-    }
-
-    function calcKeyClear() {
-      if (calcExpr) pushCalcStepSnapshot();
-      clearPresetSelectionHighlight();
-      calcExpr = '';
-      calcResult = 0;
-      updateCalcUI();
-    }
-
-    function calcKeyEquals() {
-      if (!calcExpr) return;
-      pushCalcStepSnapshot();
-      const val = safeEvaluateCalc(calcExpr);
-      calcExpr = val > 0 ? String(val) : '';
-      calcResult = val;
-      updateCalcUI();
-    }
-
-    function calcKeyPrevStep() {
-      if (calcHistoryStack.length === 0) return;
-      calcExpr = calcHistoryStack.pop();
-      updateCalcPrevBtnState();
-      updateCalcUI();
-    }
-
-    function updateCalcUI() {
-      calcResult = safeEvaluateCalc(calcExpr);
-      const hasOperator = /[+\-×÷]/.test(calcExpr);
-
-      const previewEl = document.getElementById('calc-expr-preview');
-      const displayEl = document.getElementById('amount-display-val');
-      const sheetExprEl = document.getElementById('calc-sheet-expr');
-
-      previewEl.textContent = hasOperator ? calcExpr : '';
-      sheetExprEl.textContent = calcExpr ? `${calcExpr} = ${calcResult.toLocaleString()} 元` : '輸入金額或算式';
-
-      if (!calcExpr && calcResult === 0) {
-        displayEl.textContent = '0';
-        displayEl.classList.add('placeholder');
-      } else {
-        displayEl.textContent = calcResult.toLocaleString();
-        displayEl.classList.remove('placeholder');
+      if (key === 'DONE_EQ') {
+        const isReadyToEqual = hasPendingOperator(calcInput) && /\d$/.test(calcInput);
+        if (isReadyToEqual) {
+          evaluateCurrentExpression();
+          updateCalcDisplay();
+        } else {
+          closeCalcKeyboard();
+        }
+        return;
       }
-      updateCalcPrevBtnState();
+
+      clearPresetSelectionHighlight();
+
+      if (ops.includes(key)) {
+        if (!calcInput) return;
+        const lastCh = calcInput.slice(-1);
+        if (ops.includes(lastCh)) {
+          calcInput = calcInput.slice(0, -1) + key;
+        } else {
+          calcInput += key;
+        }
+        updateCalcDisplay();
+        return;
+      }
+
+      if (key === '.') {
+        const parts = calcInput.split(/[+\-×÷]/);
+        const curNum = parts[parts.length - 1];
+        if (!curNum.includes('.')) {
+          calcInput += (curNum === '' ? '0.' : '.');
+        }
+        updateCalcDisplay();
+        return;
+      }
+
+      // 數字 0-9
+      if (calcLastFormula && !hasPendingOperator(calcInput)) {
+        calcLastFormula = '';
+      }
+      const parts = calcInput.split(/[+\-×÷]/);
+      const curNum = parts[parts.length - 1];
+      if (curNum === '0') {
+        calcInput = calcInput.slice(0, -1) + key;
+      } else if (curNum.replace('.', '').length < 9) {
+        calcInput += key;
+      }
+      updateCalcDisplay();
     }
 
     function setAmountFromPreset(amt) {
-      pushCalcStepSnapshot();
-      calcExpr = String(amt);
-      calcResult = Number(amt) || 0;
-      updateCalcUI();
+      calcLastFormula = '';
+      calcInput = String(amt);
+      updateCalcDisplay();
     }
 
-    // ========= 核心排序、餘額重算與版本時光機（Undo / Redo） =========
-    // 確保任意補記過去日期或左滑刪除中間任一筆紀錄後，所有時間軸與當下餘額100%精確
+    // ========= 核心嚴謹資料重算與版本時光機（修復重置與今日支出/上一步下一步的所有連動） =========
     function recalculateState() {
       if (!Array.isArray(appState.categories) || appState.categories.length === 0) {
         appState.categories = ['餐飲', '娛樂（遊戲）', '娛樂（其他）', '網路'];
@@ -1890,24 +1940,28 @@
         appState.logs = [];
       }
 
-      // 為舊資料補齊唯一 id，並按日期由新到舊穩定排序
+      const totalLen = appState.logs.length;
       appState.logs.forEach((item, i) => {
         if (!item.id) {
           item.id = 'log_' + (Date.now() - i) + '_' + i;
         }
+        // 為缺少 seq 的歷史資料賦予嚴格遞增序號（越上面的越新，seq 越大）
+        if (typeof item.seq !== 'number') {
+          item.seq = totalLen - i;
+        }
       });
 
-      // 依日期字串（YYYY/MM/DD）由新到舊排序；同一天內維持原陣列順序（越晚新增的排越前面）
+      // 穩定排序：先比對日期字串（YYYY/MM/DD）由新到舊；同一天內嚴格依照 seq 由大到小（最新操作永遠在最上面，絕不因反覆重算而錯位）
       appState.logs.sort((a, b) => {
         const dayA = String(a.date || '').split(' ')[0];
         const dayB = String(b.date || '').split(' ')[0];
         if (dayA !== dayB) {
           return dayB.localeCompare(dayA);
         }
-        return 0;
+        return (Number(b.seq) || 0) - (Number(a.seq) || 0);
       });
 
-      // 由舊到新逐步計算每筆紀錄的 remaining、total 以及本輪分類統計
+      // 反轉為時間軸順序（由舊到新）逐步計算每筆紀錄的當下餘額、本輪總預算與最新重置點
       const chronological = [...appState.logs].reverse();
       let runningRem = 0;
       let runningTot = 0;
@@ -1938,6 +1992,7 @@
       appState.currentRemaining = runningRem;
       appState.currentTotal = runningTot;
 
+      // 僅統計「最後一次清空（重置）之後」的本輪分類支出
       const pieStats = {};
       for (let i = lastClearIdx + 1; i < chronological.length; i++) {
         const item = chronological[i];
@@ -1949,6 +2004,35 @@
       }
       appState.pieStats = pieStats;
       appState.logs = chronological.reverse();
+    }
+
+    // 計算「今日支出」：嚴格只計算「最後一次清空（重置）之後」且日期為今天的支出！
+    // 如此一來，當執行重置、或透過「上一步 / 下一步」跨越重置點時，今日支出都會 100% 同步歸零或回復
+    function calculateTodaySpend() {
+      const todayPrefix = getTodayDateKey();
+      let sum = 0;
+      const logs = appState.logs || [];
+      for (let i = 0; i < logs.length; i++) {
+        const item = logs[i];
+        if (item.type === '清空') {
+          // 因為 logs 是由新到舊排列，遇到第一個「清空」就代表更早之前的紀錄屬於上一輪週期，立即停止累加
+          break;
+        }
+        if (item.type === '支出' && String(item.date || '').startsWith(todayPrefix)) {
+          sum += Number(item.amount) || 0;
+        }
+      }
+      return sum;
+    }
+
+    function getNextSeqNumber() {
+      let maxSeq = 0;
+      (appState.logs || []).forEach(item => {
+        if (typeof item.seq === 'number' && item.seq > maxSeq) {
+          maxSeq = item.seq;
+        }
+      });
+      return maxSeq + 1;
     }
 
     function createSnapshotObject() {
@@ -1986,12 +2070,10 @@
       }
     }
 
-    // 每次進行資料異動（非上一步/下一步）時呼叫，紀錄一個新版本
     function commitChangeWithVersion() {
       recalculateState();
       const snap = createSnapshotObject();
 
-      // 若目前指標不在最頂端，截斷後方的舊未來分支
       if (historyPointer < historyStack.length - 1) {
         historyStack = historyStack.slice(0, historyPointer + 1);
       }
@@ -2030,6 +2112,21 @@
 
     function loadStateFromLocal() {
       try {
+        const rawHist = localStorage.getItem(HISTORY_STORAGE_KEY);
+        if (rawHist) {
+          const parsedHist = JSON.parse(rawHist);
+          if (parsedHist && Array.isArray(parsedHist.stack) && parsedHist.stack.length > 0) {
+            historyStack = parsedHist.stack;
+            historyPointer = typeof parsedHist.pointer === 'number'
+              ? Math.min(Math.max(0, parsedHist.pointer), historyStack.length - 1)
+              : historyStack.length - 1;
+            // 直接以當前版本指標的快照作為唯一真實來源，確保重整網頁後與上一步/下一步狀態 100% 同步
+            applySnapshotObject(historyStack[historyPointer]);
+            updateUndoRedoButtonsUI();
+            return;
+          }
+        }
+
         const rawState = localStorage.getItem(STORAGE_KEY);
         if (rawState) {
           const parsed = JSON.parse(rawState);
@@ -2041,35 +2138,22 @@
           }
         }
         recalculateState();
-
-        const rawHist = localStorage.getItem(HISTORY_STORAGE_KEY);
-        if (rawHist) {
-          const parsedHist = JSON.parse(rawHist);
-          if (parsedHist && Array.isArray(parsedHist.stack) && parsedHist.stack.length > 0) {
-            historyStack = parsedHist.stack;
-            historyPointer = typeof parsedHist.pointer === 'number'
-              ? Math.min(Math.max(0, parsedHist.pointer), historyStack.length - 1)
-              : historyStack.length - 1;
-          }
-        }
       } catch (e) {
         console.error('讀取 LocalStorage 失敗:', e);
       }
 
-      if (historyStack.length === 0) {
-        historyStack = [createSnapshotObject()];
-        historyPointer = 0;
-        persistToLocalStorage();
-      }
+      historyStack = [createSnapshotObject()];
+      historyPointer = 0;
+      persistToLocalStorage();
       updateUndoRedoButtonsUI();
     }
 
-    // ========= 匯出（存檔）與 匯入（覆蓋還原）功能 =========
+    // ========= 匯出与匯入功能 =========
     function exportBackupFile() {
       recalculateState();
       const backupPayload = {
         app: 'PocketLedger_GitHub',
-        version: 2,
+        version: 3,
         exportedAt: getNowFormattedString(),
         data: {
           categories: appState.categories,
@@ -2138,13 +2222,12 @@
 
           selectedPresetIndex = null;
 
-          // 若匯入檔內含版本歷史則一併還原，否則將匯入狀態作為新版本壓入堆疊（讓匯入這個動作本身也能退回上一步）
           if (parsed && parsed.versionHistory && Array.isArray(parsed.versionHistory.stack) && parsed.versionHistory.stack.length > 0) {
             historyStack = parsed.versionHistory.stack;
             historyPointer = typeof parsed.versionHistory.pointer === 'number'
               ? Math.min(Math.max(0, parsed.versionHistory.pointer), historyStack.length - 1)
               : historyStack.length - 1;
-            recalculateState();
+            applySnapshotObject(historyStack[historyPointer]);
             persistToLocalStorage();
             updateUndoRedoButtonsUI();
           } else {
@@ -2197,7 +2280,6 @@
         closeCalcKeyboard();
       }
 
-      // 每次從其他分頁進入「記帳」頁時，永遠預設為今天日期並重置表單
       if (tabName === 'record' && prevTab !== 'record') {
         resetRecordFormOnEnter();
       } else if (tabName === 'overview') {
@@ -2210,7 +2292,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 在「記帳」分頁內切換「支出 / 收入」：完全保留目前已輸入的金額、算式、已選日期與計算機鍵盤狀態！
+    // 切換「支出 / 收入」：完全保留目前輸入到一半的金額算式、已選日期，且若計算機鍵盤開著也保持開啟不收回！
     function setMode(mode) {
       currentMode = mode;
       const btnExp = document.getElementById('btn-mode-exp');
@@ -2229,13 +2311,17 @@
         expFields.style.display = 'none';
         incFields.style.display = 'block';
       }
+
+      const kb = document.getElementById('calc-keyboard');
+      if (kb && kb.classList.contains('active')) {
+        alignCalcKeyboardToAmountLine();
+      }
     }
 
     function resetRecordFormOnEnter() {
-      calcExpr = '';
-      calcResult = 0;
-      calcHistoryStack = [];
-      updateCalcUI();
+      calcInput = '';
+      calcLastFormula = '';
+      updateCalcDisplay();
 
       setRecordDateToToday();
 
@@ -2266,28 +2352,19 @@
       renderPresetsSelectList();
       renderHistory();
       updateTopRightActionButtons();
-    }
-
-    function calculateTodaySpend() {
-      const todayPrefix = getTodayDateKey();
-      let sum = 0;
-      (appState.logs || []).forEach(item => {
-        if (item.type === '支出' && String(item.date || '').startsWith(todayPrefix)) {
-          sum += Number(item.amount) || 0;
-        }
-      });
-      return sum;
+      if (document.getElementById('daily-spend-sheet').classList.contains('active')) {
+        renderDailySpendSheetContent();
+      }
     }
 
     // ========= 每日支出總覽 Bottom Sheet =========
-    function openDailySpendSheet() {
+    function renderDailySpendSheetContent() {
       const listEl = document.getElementById('daily-sheet-list');
       listEl.innerHTML = '';
 
       const logs = appState.logs || [];
       if (logs.length === 0) {
         listEl.innerHTML = '<div class="empty-hint" style="padding:32px 0;">尚無任何支出紀錄</div>';
-        document.getElementById('daily-spend-sheet').classList.add('active');
         return;
       }
 
@@ -2318,7 +2395,6 @@
       const hasAnyExpense = groups.some(g => !g.isClear);
       if (!hasAnyExpense) {
         listEl.innerHTML = '<div class="empty-hint" style="padding:32px 0;">尚無任何支出紀錄</div>';
-        document.getElementById('daily-spend-sheet').classList.add('active');
         return;
       }
 
@@ -2343,7 +2419,10 @@
         }
         listEl.appendChild(div);
       });
+    }
 
+    function openDailySpendSheet() {
+      renderDailySpendSheetContent();
       document.getElementById('daily-spend-sheet').classList.add('active');
     }
 
@@ -2592,7 +2671,7 @@
     // ========= 新增、重置、左滑刪除任一紀錄 =========
     function submitRecord() {
       closeCalcKeyboard();
-      const amount = Math.abs(Number(calcResult) || 0);
+      const amount = Math.abs(Number(computeExpressionValue(calcInput)) || 0);
       if (!amount || amount <= 0) {
         alert('請輸入大於 0 的金額');
         return;
@@ -2602,13 +2681,13 @@
       const selectedSlashDate = dateInputVal.replace(/-/g, '/');
       const todaySlashDate = getTodayDateKey();
 
-      // 若是記「今天」的帳，自動連帶紀錄當下「時:分」；若是補記過去非當天的帳，則只紀錄「年/月/日」
       const finalDateStr = (selectedSlashDate === todaySlashDate)
         ? `${selectedSlashDate} ${getNowTimePart()}`
         : selectedSlashDate;
 
       const newLog = {
         id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        seq: getNextSeqNumber(),
         date: finalDateStr,
         type: currentMode,
         amount: amount,
@@ -2646,8 +2725,10 @@
       const ok = confirm('確定要重置嗎？\n這會將目前的「可用餘額」與「本輪預算」歸零，並開始新一輪的計算。');
       if (!ok) return;
 
+      closeCalcKeyboard();
       appState.logs.unshift({
         id: 'log_' + Date.now() + '_clear',
+        seq: getNextSeqNumber(),
         date: getNowFormattedString(),
         type: '清空',
         amount: 0,
@@ -2748,14 +2829,12 @@
         fgEl.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
         const fullWidth = wrapper.offsetWidth || 320;
 
-        // 左滑拉到底（超過寬度 45%）直接刪除該筆紀錄
         if (currentX < -fullWidth * 0.45) {
           fgEl.style.transform = `translateX(-${fullWidth}px)`;
           setTimeout(() => {
             deleteLogById(logId);
           }, 160);
         } else if (currentX < -38) {
-          // 輕滑露出「刪除」按鈕
           fgEl.style.transform = 'translateX(-78px)';
           wrapper.classList.add('open');
           wrapper.classList.remove('swiping');

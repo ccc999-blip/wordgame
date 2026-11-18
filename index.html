@@ -21,6 +21,9 @@
       --border-dark: #CCC9C0;  /* 強調底線色 */
       --expense: #8C4A32;      /* 高級古銅深褐 (支出 / 負數) */
       --income: #385E4C;       /* 霧面墨綠 (收入 / 盈餘) */
+      --top-bar-h: calc(env(safe-area-inset-top, 20px) + 68px);
+      --nav-bottom: calc(env(safe-area-inset-bottom, 10px) + 18px);
+      --nav-total-space: calc(env(safe-area-inset-bottom, 10px) + 66px);
     }
 
     * {
@@ -33,19 +36,18 @@
       font-family: inherit;
     }
 
-    html {
+    html, body {
+      margin: 0;
+      padding: 0;
       background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", "Noto Sans TC", sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", "Noto Sans TC", sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 96px);
-      -webkit-font-smoothing: antialiased;
+      padding-bottom: var(--nav-total-space);
     }
 
     /* 固定頂部狀態列背景色補償層 */
@@ -55,15 +57,15 @@
       top: -100px;
       left: 0;
       right: 0;
-      height: calc(env(safe-area-inset-top, 20px) + 120px);
+      height: calc(env(safe-area-inset-top, 20px) + 130px);
       background-color: var(--bg);
       z-index: -1;
       pointer-events: none;
     }
 
-    /* 頂部極簡標題列 */
+    /* 頂部極簡標題列（再往下一點點，完全離開頂部玻璃化區域） */
     .top-bar {
-      padding-top: calc(env(safe-area-inset-top, 18px) + 22px);
+      padding-top: calc(env(safe-area-inset-top, 20px) + 30px);
       padding-bottom: 12px;
       padding-left: 24px;
       padding-right: 24px;
@@ -99,58 +101,52 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       justify-content: flex-end;
     }
-    .btn-top-undo {
-      background: transparent;
-      color: var(--expense);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 5px 8px;
-      font-size: 11.5px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      display: none;
+    .top-btn-group {
+      display: flex;
       align-items: center;
-      gap: 3px;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-    }
-    .btn-top-undo:active {
-      background: var(--surface-sub);
-      border-color: var(--expense);
-      transform: scale(0.97);
+      gap: 6px;
     }
     .btn-top-tool {
       background: transparent;
       color: var(--muted);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 5px 8px;
+      padding: 5px 9px;
       font-size: 11.5px;
       font-weight: 500;
       letter-spacing: 0.3px;
       cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
       white-space: nowrap;
+      height: 28px;
       transition: all 0.15s ease;
     }
-    .btn-top-tool:active {
+    .btn-top-tool:active:not(:disabled) {
       background: var(--surface-sub);
       color: var(--text);
       border-color: var(--border-dark);
-      transform: scale(0.97);
+      transform: scale(0.96);
+    }
+    .btn-top-tool:disabled {
+      opacity: 0.32;
+      cursor: default;
+    }
+    .btn-top-icon-only {
+      padding: 0 9px;
+      min-width: 34px;
     }
     .btn-reset {
       background: transparent;
       color: var(--muted);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 5px 8px;
+      padding: 5px 9px;
       font-size: 11.5px;
       font-weight: 500;
       letter-spacing: 0.3px;
@@ -159,18 +155,19 @@
       align-items: center;
       gap: 4px;
       white-space: nowrap;
+      height: 28px;
       transition: all 0.15s ease;
     }
     .btn-reset:active {
       background: var(--surface-sub);
       color: var(--expense);
       border-color: var(--expense);
-      transform: scale(0.97);
+      transform: scale(0.96);
     }
 
     /* 頁面主容器 */
     .container {
-      padding: 18px 24px;
+      padding: 0 24px;
       max-width: 520px;
       margin: 0 auto;
     }
@@ -181,24 +178,30 @@
     .page.active {
       display: block;
     }
+    /* 概覽頁專用：讓圖表長方體在「上方橫線」與「下方導航列」之間上下等距置中 */
+    #page-overview.active {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100dvh - var(--top-bar-h) - var(--nav-total-space));
+    }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(3px); }
+      from { opacity: 0; transform: translateY(2px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ========= 1. 概覽頁（微調三行間距 + 圖表方形增高並垂直置中） ========= */
+    /* ========= 1. 概覽頁 ========= */
     .balance-box {
-      padding: 4px 0 22px 0;
+      padding: 18px 0 20px 0;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
       text-align: left;
+      flex-shrink: 0;
     }
     .balance-label {
       font-size: 12px;
       letter-spacing: 1px;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 12px;
+      margin-bottom: 11px;
       font-weight: 500;
     }
     .balance-numbers {
@@ -231,7 +234,7 @@
     }
 
     .today-spend-row {
-      margin-top: 16px;
+      margin-top: 15px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -266,24 +269,33 @@
       margin-left: -2px;
     }
 
+    /* 概覽中間圖表容器：透過 flex: 1 與 align-items: center 讓長方體上下間距完全相等 */
+    .overview-middle-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 14px 0;
+    }
     .section-block {
+      width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 22px 20px 24px 20px;
-      margin: 4px auto 20px auto;
+      padding: 20px 18px 22px 18px;
+      margin: auto 0;
     }
 
     .main-burn-block {
-      padding-bottom: 18px;
+      padding-bottom: 16px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     .main-burn-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 11px;
+      margin-bottom: 10px;
     }
     .main-burn-title {
       font-size: 13px;
@@ -352,12 +364,12 @@
       font-weight: 500;
       color: var(--muted);
       letter-spacing: 0.5px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .compact-pie-box {
       position: relative;
       width: 100%;
-      height: 192px;
+      height: 184px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -372,18 +384,21 @@
       padding: 24px 0 8px 0;
     }
 
-    /* ========= 2. 記帳頁 ========= */
+    /* ========= 2. 記帳頁（新增日期選擇列 + 計算機觸發欄位 + 緊湊一屏控制） ========= */
+    #page-record {
+      padding-top: 14px;
+    }
     .mode-switch {
       display: flex;
       background: var(--surface-sub);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 3px;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
     .mode-btn {
       flex: 1;
-      padding: 9px;
+      padding: 8px;
       border: none;
       background: transparent;
       border-radius: 6px;
@@ -406,13 +421,13 @@
     }
 
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .form-label-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       gap: 4px;
       flex-wrap: nowrap;
     }
@@ -441,46 +456,119 @@
       color: var(--text);
     }
 
+    /* 金額顯示框（點擊喚出內建計算機鍵盤） */
     .amount-input-wrapper {
       position: relative;
       display: flex;
-      align-items: baseline;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       border-bottom: 1.5px solid var(--border-dark);
-      padding-bottom: 4px;
-      margin-bottom: 4px;
-      transition: border-color 0.2s ease;
+      padding: 2px 36px 5px 36px;
+      margin-bottom: 2px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background-color 0.15s ease;
+      border-radius: 6px 6px 0 0;
     }
-    .amount-input-wrapper:focus-within {
+    .amount-input-wrapper.calc-open {
       border-bottom-color: var(--text);
+      background-color: rgba(239, 236, 230, 0.45);
     }
-    .input-amount {
-      width: 100%;
-      font-size: 36px;
+    .calc-expr-preview {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      min-height: 16px;
+      letter-spacing: 0.5px;
+    }
+    .amount-display-val {
+      font-size: 34px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.5px;
-      padding: 4px 36px;
-      border: none;
-      border-radius: 0;
-      text-align: center;
-      outline: none;
-      background: transparent;
       color: var(--text);
-      -moz-appearance: textfield;
+      line-height: 1.15;
+      min-height: 39px;
     }
-    .input-amount::-webkit-outer-spin-button,
-    .input-amount::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
+    .amount-display-val.placeholder {
+      color: var(--muted-light);
+      font-weight: 500;
     }
     .amount-unit {
       position: absolute;
-      right: 6px;
-      bottom: 10px;
+      right: 8px;
+      bottom: 9px;
       font-size: 15px;
       font-weight: 500;
       color: var(--muted);
       pointer-events: none;
+    }
+
+    /* 新增：金額與下方類別之間的「選擇日期」極簡區塊 */
+    .date-picker-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .date-picker-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .date-picker-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+    .date-picker-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .date-display-text {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.2px;
+    }
+    .date-today-tag {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--income);
+      background: var(--surface-sub);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .date-past-tag {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--expense);
+      background: var(--surface-sub);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    /* 透明覆蓋的原生日期選擇器，點擊整條日期列即可直接拉出 iOS 滾輪選年月日 */
+    .native-date-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
     }
 
     .select-box {
@@ -488,7 +576,7 @@
       font-size: 14px;
       font-weight: 500;
       color: var(--text);
-      padding: 9px 28px 9px 10px;
+      padding: 8px 28px 8px 10px;
       border: 1px solid var(--border);
       border-radius: 6px;
       background-color: var(--surface);
@@ -509,7 +597,7 @@
       font-size: 14px;
       font-weight: 400;
       color: var(--text);
-      padding: 9px 10px;
+      padding: 8px 10px;
       border: 1px solid var(--border);
       border-radius: 6px;
       background-color: var(--surface);
@@ -526,10 +614,9 @@
     .expense-split-layout {
       display: grid;
       grid-template-columns: 46% 1fr;
-      gap: 14px;
+      gap: 12px;
       align-items: stretch;
-      margin-top: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
     @media (max-width: 340px) {
       .expense-split-layout {
@@ -541,7 +628,7 @@
       background: var(--surface-sub);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 10px;
+      padding: 9px;
       display: flex;
       flex-direction: column;
       height: 100%;
@@ -550,14 +637,14 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 195px;
+      max-height: 176px;
       overflow-y: auto;
     }
     .preset-chip {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 7px 10px;
+      padding: 6.5px 9px;
       text-align: left;
       cursor: pointer;
       display: flex;
@@ -613,7 +700,7 @@
 
     .btn-submit {
       width: 100%;
-      padding: 14px;
+      padding: 13px;
       font-size: 15px;
       font-weight: 600;
       letter-spacing: 1.5px;
@@ -622,7 +709,6 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      margin-top: 2px;
       transition: opacity 0.15s ease, transform 0.1s ease;
     }
     .btn-submit:active {
@@ -630,33 +716,76 @@
       transform: scale(0.99);
     }
 
-    /* ========= 3. 紀錄頁 ========= */
+    /* ========= 3. 紀錄頁（支援左滑出現刪除鍵 / 拉到底直接刪除） ========= */
+    #page-history {
+      padding-top: 12px;
+    }
     .log-list {
       display: flex;
       flex-direction: column;
     }
-    .log-item {
-      padding: 14px 4px;
+    .swipe-item-wrapper {
+      position: relative;
+      overflow: hidden;
       border-bottom: 1px solid var(--border);
+      background-color: var(--bg);
+    }
+    .swipe-item-wrapper.no-bottom-border {
+      border-bottom: none;
+    }
+    .swipe-item-wrapper.clear-wrapper {
+      border-bottom: none;
+      margin: 8px 0;
+      border-radius: 6px;
+    }
+    /* 左滑底層：古銅深褐刪除槽 */
+    .swipe-delete-bg {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      background-color: var(--expense);
+      color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 22px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .swipe-item-wrapper.swiping .swipe-delete-bg,
+    .swipe-item-wrapper.open .swipe-delete-bg {
+      opacity: 1;
+    }
+    .log-item {
+      position: relative;
+      z-index: 2;
+      background-color: var(--bg);
+      padding: 14px 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+      touch-action: pan-y;
     }
-    .log-item:first-child {
-      padding-top: 4px;
+    .swipe-item-wrapper:first-child .log-item {
+      padding-top: 6px;
     }
-    .log-item.no-bottom-border {
-      border-bottom: none;
+    .swipe-item-wrapper.no-bottom-border .log-item {
       padding-bottom: 8px;
     }
     .log-item.clear-event {
       background: var(--surface-sub);
-      border-bottom: none;
       justify-content: space-between;
       align-items: center;
       padding: 10px 12px;
-      margin: 8px 0;
       border-radius: 6px;
     }
     .log-left {
@@ -729,7 +858,7 @@
       margin: 6px 0;
       padding: 4px 0;
     }
-    .day-summary-divider + .log-item {
+    .day-summary-divider + .swipe-item-wrapper .log-item {
       padding-top: 8px;
     }
     .day-summary-line {
@@ -756,10 +885,10 @@
       margin-left: 3px;
     }
 
-    /* ========= 底部固定浮動膠囊導航列 ========= */
+    /* ========= 底部固定浮動膠囊導航列（移至先前位置與底部的中間） ========= */
     .bottom-nav-wrap {
       position: fixed;
-      bottom: calc(env(safe-area-inset-bottom, 12px) + 34px);
+      bottom: var(--nav-bottom);
       left: 0;
       right: 0;
       z-index: 60;
@@ -773,7 +902,7 @@
       display: flex;
       width: 100%;
       max-width: 340px;
-      background: rgba(253, 252, 249, 0.92);
+      background: rgba(253, 252, 249, 0.94);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-dark);
@@ -797,6 +926,110 @@
     .nav-tab.active {
       background: var(--text);
       color: var(--surface);
+    }
+
+    /* ========= 內建日系極簡計算機鍵盤 ========= */
+    .calc-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: transparent;
+      z-index: 85;
+      display: none;
+    }
+    .calc-sheet-backdrop.active {
+      display: block;
+    }
+    .calc-keyboard {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 90;
+      background: var(--bg);
+      border-top: 1px solid var(--border-dark);
+      border-radius: 16px 16px 0 0;
+      padding: 10px 16px calc(env(safe-area-inset-bottom, 12px) + 12px) 16px;
+      max-width: 520px;
+      margin: 0 auto;
+      transform: translateY(105%);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -4px 20px rgba(44, 44, 42, 0.08);
+    }
+    .calc-keyboard.active {
+      transform: translateY(0);
+    }
+    .calc-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 0 2px;
+    }
+    .calc-top-expr {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .btn-calc-done {
+      background: var(--text);
+      color: var(--surface);
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+    }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+    .calc-key {
+      height: 46px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 19px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+    .calc-key:active {
+      background: var(--surface-sub);
+      transform: scale(0.96);
+    }
+    .calc-key.func {
+      background: var(--surface-sub);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .calc-key.func:disabled {
+      opacity: 0.35;
+    }
+    .calc-key.op {
+      background: var(--surface-sub);
+      color: var(--expense);
+      font-size: 21px;
+      font-weight: 600;
+    }
+    .calc-key.eq {
+      background: var(--text);
+      color: var(--surface);
+      border-color: var(--text);
+      font-size: 19px;
     }
 
     /* ========= iOS 風格底部滑出抽屜（每日支出總覽 Bottom Sheet） ========= */
@@ -1042,35 +1275,52 @@
 </head>
 <body>
 
-  <!-- 隱藏的檔案上傳選擇器（供匯入備份檔覆蓋使用） -->
+  <!-- 隱藏的檔案上傳選擇器 -->
   <input type="file" id="import-file-input" accept=".json,application/json" style="display:none;" onchange="handleImportFile(event)">
 
-  <!-- 頂部極簡標題與右側動作區（刪除最新一筆 + 存檔 + 匯入 + 重置） -->
+  <!-- 頂部極簡標題與右側動態動作區 -->
   <header class="top-bar">
     <div class="page-title-wrap">
       <span id="header-title-zh" class="page-title-zh">概覽</span>
       <span id="header-title-en" class="page-title-en">Overview</span>
     </div>
     <div class="top-actions">
-      <button id="btn-top-undo" class="btn-top-undo" onclick="handleDeleteLatest()" title="刪除最新一筆紀錄">
-        <span>刪除最新一筆</span>
-      </button>
-      <button class="btn-top-tool" onclick="exportBackupFile()" title="匯出存檔備份">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        <span>存檔</span>
-      </button>
-      <button class="btn-top-tool" onclick="triggerImportFile()" title="匯入存檔並覆蓋現有資料">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-        <span>匯入</span>
-      </button>
+      <!-- 概覽與記帳頁顯示：匯出 + 匯入 -->
+      <div id="top-io-group" class="top-btn-group">
+        <button class="btn-top-tool" onclick="exportBackupFile()" title="匯出備份檔">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>匯出</span>
+        </button>
+        <button class="btn-top-tool" onclick="triggerImportFile()" title="匯入備份檔並覆蓋">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>匯入</span>
+        </button>
+      </div>
+
+      <!-- 紀錄頁專屬顯示：回到上一步 + 回到下一步（純線條向量圖示，無 Emoji） -->
+      <div id="top-history-group" class="top-btn-group" style="display:none;">
+        <button id="btn-undo-step" class="btn-top-tool btn-top-icon-only" onclick="handleUndoStep()" title="回到上一步" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="11 17 6 12 11 7"></polyline>
+            <polyline points="18 17 13 12 18 7"></polyline>
+          </svg>
+        </button>
+        <button id="btn-redo-step" class="btn-top-tool btn-top-icon-only" onclick="handleRedoStep()" title="回到下一步" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="13 17 18 12 13 7"></polyline>
+            <polyline points="6 17 11 12 6 7"></polyline>
+          </svg>
+        </button>
+      </div>
+
       <button class="btn-reset" onclick="handleClear()" title="清空歸零">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -1091,7 +1341,7 @@
           <span class="balance-sep">/</span>
           <span id="overview-tot" class="balance-tot">0 元</span>
         </div>
-        <!-- 今日花費小標籤（點擊展開每日花費抽屜） -->
+        <!-- 今日花費小標籤 -->
         <div class="today-spend-row" onclick="openDailySpendSheet()" title="點擊查看每日支出明細">
           <span class="today-spend-label">今日支出</span>
           <span id="overview-today" class="today-spend-val">0 元</span>
@@ -1103,27 +1353,27 @@
         </div>
       </div>
 
-      <!-- 上方保留總消耗長條圖 + 下方置中圓餅圖 -->
-      <div class="section-block">
-        <!-- 上半部：本輪總消耗 -->
-        <div class="main-burn-block">
-          <div class="main-burn-header">
-            <span class="main-burn-title">本輪總消耗</span>
-            <div class="main-burn-values">
-              <span id="burn-spent-val" class="main-burn-spent">0 元</span>
-              <span class="main-burn-budget"> / <span id="burn-budget-val">0 元</span></span>
+      <!-- 中間彈性容器：確保圖表方塊與上方橫線、下方導航列距離完全相等 -->
+      <div class="overview-middle-wrap">
+        <div class="section-block">
+          <div class="main-burn-block">
+            <div class="main-burn-header">
+              <span class="main-burn-title">本輪總消耗</span>
+              <div class="main-burn-values">
+                <span id="burn-spent-val" class="main-burn-spent">0 元</span>
+                <span class="main-burn-budget"> / <span id="burn-budget-val">0 元</span></span>
+              </div>
             </div>
+            <div id="main-progress-track" class="thick-bar-track"></div>
           </div>
-          <div id="main-progress-track" class="thick-bar-track"></div>
-        </div>
 
-        <!-- 下半部：各類別支出佔比 -->
-        <div>
-          <div class="sub-cat-header">各類別支出佔比</div>
-          <div id="pie-container" class="compact-pie-box" style="display:none;">
-            <canvas id="pieChart"></canvas>
+          <div>
+            <div class="sub-cat-header">各類別支出佔比</div>
+            <div id="pie-container" class="compact-pie-box" style="display:none;">
+              <canvas id="pieChart"></canvas>
+            </div>
+            <div id="chart-empty" class="empty-hint">尚無本輪支出紀錄</div>
           </div>
-          <div id="chart-empty" class="empty-hint">尚無本輪支出紀錄</div>
         </div>
       </div>
     </div>
@@ -1135,15 +1385,34 @@
         <button id="btn-mode-inc" class="mode-btn income" onclick="setMode('收入')">收入</button>
       </div>
 
-      <!-- 金額輸入 -->
-      <div class="form-group">
+      <!-- 金額欄（點擊開啟自製計算機鍵盤，切換收支時狀態不消失） -->
+      <div class="form-group" style="margin-bottom: 6px;">
         <div class="form-label-row">
           <span class="form-label">金額</span>
         </div>
-        <div class="amount-input-wrapper">
-          <input type="number" id="input-amount" class="input-amount" inputmode="numeric" pattern="[0-9]*" value="" oninput="clearPresetSelectionHighlight()">
+        <div id="amount-box" class="amount-input-wrapper" onclick="openCalcKeyboard()">
+          <div id="calc-expr-preview" class="calc-expr-preview"></div>
+          <div id="amount-display-val" class="amount-display-val placeholder">0</div>
           <span class="amount-unit">元</span>
         </div>
+      </div>
+
+      <!-- 選擇日期列（預設今日，僅選年月日，切換收支時保留已選日期） -->
+      <div class="date-picker-bar">
+        <div class="date-picker-left">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span class="date-picker-label">記帳日期</span>
+        </div>
+        <div class="date-picker-right">
+          <span id="record-date-display" class="date-display-text"></span>
+          <span id="record-date-badge" class="date-today-tag">今日</span>
+        </div>
+        <input type="date" id="input-record-date" class="native-date-input" onchange="handleDateInputChange()">
       </div>
 
       <!-- 支出專屬欄位 -->
@@ -1170,7 +1439,7 @@
               <div class="form-label-row">
                 <span class="form-label">說明（選填）</span>
               </div>
-              <input type="text" id="input-expense-memo" class="input-boxed" placeholder="標記用途...">
+              <input type="text" id="input-expense-memo" class="input-boxed" placeholder="標記用途..." onfocus="closeCalcKeyboard()">
             </div>
           </div>
 
@@ -1186,12 +1455,12 @@
       </div>
 
       <!-- 收入專屬欄位 -->
-      <div id="income-fields" style="display:none; margin-bottom:20px;">
+      <div id="income-fields" style="display:none; margin-bottom:16px;">
         <div class="form-group">
           <div class="form-label-row">
             <span class="form-label">說明（選填）</span>
           </div>
-          <input type="text" id="input-note" class="input-boxed" placeholder="例如：每週預算、零用錢">
+          <input type="text" id="input-note" class="input-boxed" placeholder="例如：每週預算、零用錢" onfocus="closeCalcKeyboard()">
         </div>
       </div>
 
@@ -1212,6 +1481,47 @@
       <button class="nav-tab" onclick="switchTab('history', this)">紀錄</button>
     </div>
   </nav>
+
+  <!-- 內建日系計算機鍵盤 -->
+  <div id="calc-backdrop" class="calc-sheet-backdrop" onclick="closeCalcKeyboard()"></div>
+  <div id="calc-keyboard" class="calc-keyboard">
+    <div class="calc-top-bar">
+      <span id="calc-sheet-expr" class="calc-top-expr">輸入金額或算式</span>
+      <button type="button" class="btn-calc-done" onclick="closeCalcKeyboard()">完成</button>
+    </div>
+    <div class="calc-grid">
+      <button type="button" class="calc-key func" onclick="calcKeyClear()">AC</button>
+      <button type="button" id="btn-calc-prev" class="calc-key func" onclick="calcKeyPrevStep()" disabled>上個算式</button>
+      <button type="button" class="calc-key func" onclick="calcKeyBackspace()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+          <line x1="18" y1="9" x2="12" y2="15"></line>
+          <line x1="12" y1="9" x2="18" y2="15"></line>
+        </svg>
+      </button>
+      <button type="button" class="calc-key op" onclick="calcKeyInput('÷')">÷</button>
+
+      <button type="button" class="calc-key" onclick="calcKeyInput('7')">7</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('8')">8</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('9')">9</button>
+      <button type="button" class="calc-key op" onclick="calcKeyInput('×')">×</button>
+
+      <button type="button" class="calc-key" onclick="calcKeyInput('4')">4</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('5')">5</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('6')">6</button>
+      <button type="button" class="calc-key op" onclick="calcKeyInput('-')">−</button>
+
+      <button type="button" class="calc-key" onclick="calcKeyInput('1')">1</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('2')">2</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('3')">3</button>
+      <button type="button" class="calc-key op" onclick="calcKeyInput('+')">+</button>
+
+      <button type="button" class="calc-key" onclick="calcKeyInput('00')">00</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('0')">0</button>
+      <button type="button" class="calc-key" onclick="calcKeyInput('.')">.</button>
+      <button type="button" class="calc-key eq" onclick="calcKeyEquals()">=</button>
+    </div>
+  </div>
 
   <!-- 點擊「今日支出」彈出的 iOS 風格底部抽屜（每日支出總覽） -->
   <div id="daily-spend-sheet" class="sheet-overlay" onclick="if(event.target === this) closeDailySpendSheet()">
@@ -1277,13 +1587,10 @@
         <div class="form-label-row">
           <span class="form-label">3. 金額</span>
         </div>
-        <div class="amount-input-wrapper">
-          <input type="number" id="preset-input-amount" class="input-amount" inputmode="numeric" pattern="[0-9]*" value="">
-          <span class="amount-unit">元</span>
-        </div>
+        <input type="number" id="preset-input-amount" class="input-boxed" inputmode="numeric" pattern="[0-9]*" placeholder="輸入金額（元）">
       </div>
 
-      <div class="modal-actions">
+      <div class="modal-actions" style="margin-top: 16px;">
         <button type="button" class="btn-secondary" onclick="closePresetFormModal()">返回</button>
         <button type="button" class="btn-primary" onclick="confirmPresetFormItem()">確定</button>
       </div>
@@ -1292,8 +1599,9 @@
 
   <script>
     const STORAGE_KEY = 'POCKET_LEDGER_GITHUB_V1';
+    const HISTORY_STORAGE_KEY = 'POCKET_LEDGER_HISTORY_STACK_V1';
+    const MAX_HISTORY_STEPS = 80;
 
-    // 系統完整狀態（logs 內部以「最新在最前（index 0）」儲存，與顯示順序一致）
     let appState = {
       categories: ['餐飲', '娛樂（遊戲）', '娛樂（其他）', '網路'],
       payments: ['現金', '悠遊卡', '行動支付', '銀行帳戶'],
@@ -1304,6 +1612,10 @@
       logs: []
     };
 
+    // 版本控制堆疊（跨重整、跨匯出匯入永久有效）
+    let historyStack = [];
+    let historyPointer = -1;
+
     let currentTab = 'overview';
     let currentMode = '支出';
     let pieChartInstance = null;
@@ -1311,9 +1623,13 @@
 
     let currentEditingType = 'category';
     let tempModalItems = [];
-
     let tempPresets = [];
     let editingPresetIdx = -1;
+
+    // 內建計算機狀態（切換支出/收入時完整保留）
+    let calcExpr = '';
+    let calcResult = 0;
+    let calcHistoryStack = [];
 
     const TAB_TITLES = {
       overview: { zh: '概覽', en: 'Overview' },
@@ -1334,23 +1650,28 @@
 
     const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 
-    // ========= 時間與星期工具函式 =========
-    function getNowFormattedString() {
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const dd = String(now.getDate()).padStart(2, '0');
-      const hh = String(now.getHours()).padStart(2, '0');
-      const min = String(now.getMinutes()).padStart(2, '0');
-      return `${yyyy}/${mm}/${dd} ${hh}:${min}`;
-    }
-
+    // ========= 日期與時間工具函式 =========
     function getTodayDateKey() {
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const dd = String(now.getDate()).padStart(2, '0');
       return `${yyyy}/${mm}/${dd}`;
+    }
+
+    function getTodayIsoDate() {
+      return getTodayDateKey().replace(/\//g, '-');
+    }
+
+    function getNowTimePart() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      return `${hh}:${min}`;
+    }
+
+    function getNowFormattedString() {
+      return `${getTodayDateKey()} ${getNowTimePart()}`;
     }
 
     function getWeekdayFromDatePart(datePart) {
@@ -1376,8 +1697,179 @@
       return wd ? `${datePart} (${wd})` : datePart;
     }
 
-    // ========= 核心資料重算與本地儲存引擎 =========
-    // 根據歷史紀錄（由舊到新）自動重算每一筆的當下餘額、當下總預算，以及本輪分類佔比
+    // ========= 日期選擇器互動邏輯 =========
+    function setRecordDateToToday() {
+      const input = document.getElementById('input-record-date');
+      input.value = getTodayIsoDate();
+      updateDateDisplayUI();
+    }
+
+    function handleDateInputChange() {
+      const input = document.getElementById('input-record-date');
+      if (!input.value) {
+        input.value = getTodayIsoDate();
+      }
+      updateDateDisplayUI();
+    }
+
+    function updateDateDisplayUI() {
+      const input = document.getElementById('input-record-date');
+      const rawIso = input.value || getTodayIsoDate();
+      const slashDate = rawIso.replace(/-/g, '/');
+      const todayKey = getTodayDateKey();
+
+      document.getElementById('record-date-display').textContent = formatDayOnlyWithWeekday(slashDate);
+      const badge = document.getElementById('record-date-badge');
+      if (slashDate === todayKey) {
+        badge.textContent = '今日';
+        badge.className = 'date-today-tag';
+      } else {
+        badge.textContent = '補記';
+        badge.className = 'date-past-tag';
+      }
+    }
+
+    // ========= 內建計算機鍵盤邏輯 =========
+    function openCalcKeyboard() {
+      document.getElementById('calc-backdrop').classList.add('active');
+      document.getElementById('calc-keyboard').classList.add('active');
+      document.getElementById('amount-box').classList.add('calc-open');
+      updateCalcUI();
+    }
+
+    function closeCalcKeyboard() {
+      document.getElementById('calc-backdrop').classList.remove('active');
+      document.getElementById('calc-keyboard').classList.remove('active');
+      document.getElementById('amount-box').classList.remove('calc-open');
+    }
+
+    function safeEvaluateCalc(expr) {
+      if (!expr) return 0;
+      let clean = String(expr)
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/−/g, '-');
+      // 若結尾是運算子，先去掉結尾運算子再即時算出目前數值
+      clean = clean.replace(/[+\-*/.]+$/, '');
+      if (!clean) return 0;
+      if (!/^[0-9+\-*/.() ]+$/.test(clean)) return 0;
+      try {
+        const val = Function('"use strict"; return (' + clean + ')')();
+        if (typeof val === 'number' && isFinite(val)) {
+          return Math.max(0, Math.round(val));
+        }
+      } catch (e) {}
+      return 0;
+    }
+
+    function pushCalcStepSnapshot() {
+      if (calcHistoryStack.length === 0 || calcHistoryStack[calcHistoryStack.length - 1] !== calcExpr) {
+        calcHistoryStack.push(calcExpr);
+        if (calcHistoryStack.length > 30) calcHistoryStack.shift();
+      }
+      updateCalcPrevBtnState();
+    }
+
+    function updateCalcPrevBtnState() {
+      const btn = document.getElementById('btn-calc-prev');
+      if (btn) btn.disabled = (calcHistoryStack.length === 0);
+    }
+
+    function calcKeyInput(ch) {
+      const ops = ['+', '-', '×', '÷'];
+      const isOp = ops.includes(ch);
+
+      if (!calcExpr && isOp) return;
+      if (!calcExpr && (ch === '0' || ch === '00')) {
+        calcExpr = '0';
+        updateCalcUI();
+        return;
+      }
+
+      pushCalcStepSnapshot();
+      clearPresetSelectionHighlight();
+
+      const lastChar = calcExpr.slice(-1);
+      if (isOp && ops.includes(lastChar)) {
+        calcExpr = calcExpr.slice(0, -1) + ch;
+      } else if (ch === '.') {
+        const parts = calcExpr.split(/[+\-×÷]/);
+        const currentNum = parts[parts.length - 1];
+        if (!currentNum.includes('.')) {
+          calcExpr += (currentNum === '' ? '0.' : '.');
+        }
+      } else {
+        if (calcExpr === '0' && !isOp && ch !== '.') {
+          calcExpr = (ch === '00') ? '0' : ch;
+        } else {
+          calcExpr += ch;
+        }
+      }
+      updateCalcUI();
+    }
+
+    function calcKeyBackspace() {
+      if (!calcExpr) return;
+      pushCalcStepSnapshot();
+      clearPresetSelectionHighlight();
+      calcExpr = calcExpr.slice(0, -1);
+      updateCalcUI();
+    }
+
+    function calcKeyClear() {
+      if (calcExpr) pushCalcStepSnapshot();
+      clearPresetSelectionHighlight();
+      calcExpr = '';
+      calcResult = 0;
+      updateCalcUI();
+    }
+
+    function calcKeyEquals() {
+      if (!calcExpr) return;
+      pushCalcStepSnapshot();
+      const val = safeEvaluateCalc(calcExpr);
+      calcExpr = val > 0 ? String(val) : '';
+      calcResult = val;
+      updateCalcUI();
+    }
+
+    function calcKeyPrevStep() {
+      if (calcHistoryStack.length === 0) return;
+      calcExpr = calcHistoryStack.pop();
+      updateCalcPrevBtnState();
+      updateCalcUI();
+    }
+
+    function updateCalcUI() {
+      calcResult = safeEvaluateCalc(calcExpr);
+      const hasOperator = /[+\-×÷]/.test(calcExpr);
+
+      const previewEl = document.getElementById('calc-expr-preview');
+      const displayEl = document.getElementById('amount-display-val');
+      const sheetExprEl = document.getElementById('calc-sheet-expr');
+
+      previewEl.textContent = hasOperator ? calcExpr : '';
+      sheetExprEl.textContent = calcExpr ? `${calcExpr} = ${calcResult.toLocaleString()} 元` : '輸入金額或算式';
+
+      if (!calcExpr && calcResult === 0) {
+        displayEl.textContent = '0';
+        displayEl.classList.add('placeholder');
+      } else {
+        displayEl.textContent = calcResult.toLocaleString();
+        displayEl.classList.remove('placeholder');
+      }
+      updateCalcPrevBtnState();
+    }
+
+    function setAmountFromPreset(amt) {
+      pushCalcStepSnapshot();
+      calcExpr = String(amt);
+      calcResult = Number(amt) || 0;
+      updateCalcUI();
+    }
+
+    // ========= 核心排序、餘額重算與版本時光機（Undo / Redo） =========
+    // 確保任意補記過去日期或左滑刪除中間任一筆紀錄後，所有時間軸與當下餘額100%精確
     function recalculateState() {
       if (!Array.isArray(appState.categories) || appState.categories.length === 0) {
         appState.categories = ['餐飲', '娛樂（遊戲）', '娛樂（其他）', '網路'];
@@ -1398,7 +1890,24 @@
         appState.logs = [];
       }
 
-      // 反轉為時間順序（由舊到新）逐步精算每筆紀錄的 remaining 與 total
+      // 為舊資料補齊唯一 id，並按日期由新到舊穩定排序
+      appState.logs.forEach((item, i) => {
+        if (!item.id) {
+          item.id = 'log_' + (Date.now() - i) + '_' + i;
+        }
+      });
+
+      // 依日期字串（YYYY/MM/DD）由新到舊排序；同一天內維持原陣列順序（越晚新增的排越前面）
+      appState.logs.sort((a, b) => {
+        const dayA = String(a.date || '').split(' ')[0];
+        const dayB = String(b.date || '').split(' ')[0];
+        if (dayA !== dayB) {
+          return dayB.localeCompare(dayA);
+        }
+        return 0;
+      });
+
+      // 由舊到新逐步計算每筆紀錄的 remaining、total 以及本輪分類統計
       const chronological = [...appState.logs].reverse();
       let runningRem = 0;
       let runningTot = 0;
@@ -1429,7 +1938,6 @@
       appState.currentRemaining = runningRem;
       appState.currentTotal = runningTot;
 
-      // 統計最後一次清空之後的各分類支出
       const pieStats = {};
       for (let i = lastClearIdx + 1; i < chronological.length; i++) {
         const item = chronological[i];
@@ -1443,8 +1951,25 @@
       appState.logs = chronological.reverse();
     }
 
-    function saveStateToLocal() {
+    function createSnapshotObject() {
+      return JSON.parse(JSON.stringify({
+        categories: appState.categories,
+        payments: appState.payments,
+        presets: appState.presets,
+        logs: appState.logs
+      }));
+    }
+
+    function applySnapshotObject(snap) {
+      if (!snap) return;
+      appState.categories = JSON.parse(JSON.stringify(snap.categories || ['餐飲', '娛樂（遊戲）', '娛樂（其他）', '網路']));
+      appState.payments = JSON.parse(JSON.stringify(snap.payments || ['現金', '悠遊卡', '行動支付', '銀行帳戶']));
+      appState.presets = JSON.parse(JSON.stringify(snap.presets || []));
+      appState.logs = JSON.parse(JSON.stringify(snap.logs || []));
       recalculateState();
+    }
+
+    function persistToLocalStorage() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           categories: appState.categories,
@@ -1452,16 +1977,62 @@
           presets: appState.presets,
           logs: appState.logs
         }));
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify({
+          stack: historyStack,
+          pointer: historyPointer
+        }));
       } catch (e) {
-        console.error('儲存至 LocalStorage 失敗:', e);
+        console.error('寫入 LocalStorage 失敗:', e);
       }
+    }
+
+    // 每次進行資料異動（非上一步/下一步）時呼叫，紀錄一個新版本
+    function commitChangeWithVersion() {
+      recalculateState();
+      const snap = createSnapshotObject();
+
+      // 若目前指標不在最頂端，截斷後方的舊未來分支
+      if (historyPointer < historyStack.length - 1) {
+        historyStack = historyStack.slice(0, historyPointer + 1);
+      }
+      historyStack.push(snap);
+      if (historyStack.length > MAX_HISTORY_STEPS) {
+        historyStack.shift();
+      }
+      historyPointer = historyStack.length - 1;
+
+      persistToLocalStorage();
+      updateUndoRedoButtonsUI();
+    }
+
+    function handleUndoStep() {
+      if (historyPointer <= 0) return;
+      historyPointer--;
+      applySnapshotObject(historyStack[historyPointer]);
+      persistToLocalStorage();
+      renderAll();
+    }
+
+    function handleRedoStep() {
+      if (historyPointer >= historyStack.length - 1) return;
+      historyPointer++;
+      applySnapshotObject(historyStack[historyPointer]);
+      persistToLocalStorage();
+      renderAll();
+    }
+
+    function updateUndoRedoButtonsUI() {
+      const btnUndo = document.getElementById('btn-undo-step');
+      const btnRedo = document.getElementById('btn-redo-step');
+      if (btnUndo) btnUndo.disabled = (historyPointer <= 0);
+      if (btnRedo) btnRedo.disabled = (historyPointer >= historyStack.length - 1);
     }
 
     function loadStateFromLocal() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
+        const rawState = localStorage.getItem(STORAGE_KEY);
+        if (rawState) {
+          const parsed = JSON.parse(rawState);
           if (parsed && typeof parsed === 'object') {
             appState.categories = Array.isArray(parsed.categories) ? parsed.categories : appState.categories;
             appState.payments = Array.isArray(parsed.payments) ? parsed.payments : appState.payments;
@@ -1469,18 +2040,36 @@
             appState.logs = Array.isArray(parsed.logs) ? parsed.logs : [];
           }
         }
+        recalculateState();
+
+        const rawHist = localStorage.getItem(HISTORY_STORAGE_KEY);
+        if (rawHist) {
+          const parsedHist = JSON.parse(rawHist);
+          if (parsedHist && Array.isArray(parsedHist.stack) && parsedHist.stack.length > 0) {
+            historyStack = parsedHist.stack;
+            historyPointer = typeof parsedHist.pointer === 'number'
+              ? Math.min(Math.max(0, parsedHist.pointer), historyStack.length - 1)
+              : historyStack.length - 1;
+          }
+        }
       } catch (e) {
         console.error('讀取 LocalStorage 失敗:', e);
       }
-      recalculateState();
+
+      if (historyStack.length === 0) {
+        historyStack = [createSnapshotObject()];
+        historyPointer = 0;
+        persistToLocalStorage();
+      }
+      updateUndoRedoButtonsUI();
     }
 
-    // ========= 存檔（匯出 JSON）與 匯入（覆蓋還原）功能 =========
+    // ========= 匯出（存檔）與 匯入（覆蓋還原）功能 =========
     function exportBackupFile() {
       recalculateState();
       const backupPayload = {
         app: 'PocketLedger_GitHub',
-        version: 1,
+        version: 2,
         exportedAt: getNowFormattedString(),
         data: {
           categories: appState.categories,
@@ -1489,6 +2078,10 @@
           currentRemaining: appState.currentRemaining,
           currentTotal: appState.currentTotal,
           logs: appState.logs
+        },
+        versionHistory: {
+          stack: historyStack,
+          pointer: historyPointer
         }
       };
 
@@ -1529,8 +2122,8 @@
 
           const logCount = source.logs.length;
           const ok = confirm(
-            `確定要匯入存檔「${file.name}」嗎？\n` +
-            `（內含 ${logCount} 筆紀錄，匯入後將完全覆蓋目前的分類、常用選項與所有記帳資料）`
+            `確定要匯入「${file.name}」嗎？\n` +
+            `（內含 ${logCount} 筆紀錄，匯入後將覆蓋目前的分類、常用選項與所有記帳資料）`
           );
           if (!ok) return;
 
@@ -1544,7 +2137,20 @@
           appState.logs = source.logs;
 
           selectedPresetIndex = null;
-          saveStateToLocal();
+
+          // 若匯入檔內含版本歷史則一併還原，否則將匯入狀態作為新版本壓入堆疊（讓匯入這個動作本身也能退回上一步）
+          if (parsed && parsed.versionHistory && Array.isArray(parsed.versionHistory.stack) && parsed.versionHistory.stack.length > 0) {
+            historyStack = parsed.versionHistory.stack;
+            historyPointer = typeof parsed.versionHistory.pointer === 'number'
+              ? Math.min(Math.max(0, parsed.versionHistory.pointer), historyStack.length - 1)
+              : historyStack.length - 1;
+            recalculateState();
+            persistToLocalStorage();
+            updateUndoRedoButtonsUI();
+          } else {
+            commitChangeWithVersion();
+          }
+
           renderAll();
           alert('已成功匯入並還原存檔狀態！');
         } catch (err) {
@@ -1554,19 +2160,28 @@
       reader.readAsText(file, 'UTF-8');
     }
 
-    // ========= 頁面初始化與切換 =========
+    // ========= 頁面初始化與分頁切換 =========
     window.onload = function() {
       loadStateFromLocal();
+      setRecordDateToToday();
       renderAll();
     };
 
-    function updateTopUndoButtonVisibility() {
-      const btnUndo = document.getElementById('btn-top-undo');
-      const hasLogs = appState.logs && appState.logs.length > 0;
-      btnUndo.style.display = (currentTab === 'history' && hasLogs) ? 'flex' : 'none';
+    function updateTopRightActionButtons() {
+      const ioGroup = document.getElementById('top-io-group');
+      const histGroup = document.getElementById('top-history-group');
+      if (currentTab === 'history') {
+        ioGroup.style.display = 'none';
+        histGroup.style.display = 'flex';
+      } else {
+        ioGroup.style.display = 'flex';
+        histGroup.style.display = 'none';
+      }
+      updateUndoRedoButtonsUI();
     }
 
     function switchTab(tabName, btnEl) {
+      const prevTab = currentTab;
       currentTab = tabName;
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
@@ -1578,16 +2193,24 @@
         document.getElementById('header-title-en').textContent = TAB_TITLES[tabName].en;
       }
 
-      updateTopUndoButtonVisibility();
+      if (tabName !== 'record') {
+        closeCalcKeyboard();
+      }
 
-      if (tabName === 'record') {
-        resetRecordFormDefaults();
+      // 每次從其他分頁進入「記帳」頁時，永遠預設為今天日期並重置表單
+      if (tabName === 'record' && prevTab !== 'record') {
+        resetRecordFormOnEnter();
       } else if (tabName === 'overview') {
         renderOverview();
+      } else if (tabName === 'history') {
+        renderHistory();
       }
+
+      updateTopRightActionButtons();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // 在「記帳」分頁內切換「支出 / 收入」：完全保留目前已輸入的金額、算式、已選日期與計算機鍵盤狀態！
     function setMode(mode) {
       currentMode = mode;
       const btnExp = document.getElementById('btn-mode-exp');
@@ -1606,11 +2229,16 @@
         expFields.style.display = 'none';
         incFields.style.display = 'block';
       }
-      resetRecordFormDefaults();
     }
 
-    function resetRecordFormDefaults() {
-      document.getElementById('input-amount').value = '';
+    function resetRecordFormOnEnter() {
+      calcExpr = '';
+      calcResult = 0;
+      calcHistoryStack = [];
+      updateCalcUI();
+
+      setRecordDateToToday();
+
       document.getElementById('input-note').value = '';
       document.getElementById('input-expense-memo').value = '';
       selectedPresetIndex = null;
@@ -1637,7 +2265,7 @@
       renderPaymentsSelect();
       renderPresetsSelectList();
       renderHistory();
-      updateTopUndoButtonVisibility();
+      updateTopRightActionButtons();
     }
 
     function calculateTodaySpend() {
@@ -1877,6 +2505,7 @@
 
     function renderCategoriesSelect() {
       const select = document.getElementById('select-category');
+      const prevVal = select.value;
       select.innerHTML = '';
       (appState.categories || []).forEach(cat => {
         const opt = document.createElement('option');
@@ -1885,7 +2514,9 @@
         select.appendChild(opt);
       });
 
-      if ((appState.categories || []).includes('餐飲')) {
+      if (prevVal && (appState.categories || []).includes(prevVal)) {
+        select.value = prevVal;
+      } else if ((appState.categories || []).includes('餐飲')) {
         select.value = '餐飲';
       } else if (select.options.length > 0) {
         select.selectedIndex = 0;
@@ -1894,6 +2525,7 @@
 
     function renderPaymentsSelect() {
       const select = document.getElementById('select-payment');
+      const prevVal = select.value;
       select.innerHTML = '';
       (appState.payments || []).forEach(pay => {
         const opt = document.createElement('option');
@@ -1902,7 +2534,9 @@
         select.appendChild(opt);
       });
 
-      if ((appState.payments || []).includes('現金')) {
+      if (prevVal && (appState.payments || []).includes(prevVal)) {
+        select.value = prevVal;
+      } else if ((appState.payments || []).includes('現金')) {
         select.value = '現金';
       } else if (select.options.length > 0) {
         select.selectedIndex = 0;
@@ -1939,7 +2573,7 @@
       if (!preset) return;
 
       selectedPresetIndex = idx;
-      document.getElementById('input-amount').value = preset.amount;
+      setAmountFromPreset(preset.amount);
 
       const catSelect = document.getElementById('select-category');
       if ([...catSelect.options].some(o => o.value === preset.category)) {
@@ -1955,16 +2589,27 @@
       }
     }
 
-    // ========= 新增、重置、刪除最新一筆紀錄（純前端即時運算） =========
+    // ========= 新增、重置、左滑刪除任一紀錄 =========
     function submitRecord() {
-      const amount = Math.abs(Number(document.getElementById('input-amount').value) || 0);
+      closeCalcKeyboard();
+      const amount = Math.abs(Number(calcResult) || 0);
       if (!amount || amount <= 0) {
         alert('請輸入大於 0 的金額');
         return;
       }
 
+      const dateInputVal = document.getElementById('input-record-date').value || getTodayIsoDate();
+      const selectedSlashDate = dateInputVal.replace(/-/g, '/');
+      const todaySlashDate = getTodayDateKey();
+
+      // 若是記「今天」的帳，自動連帶紀錄當下「時:分」；若是補記過去非當天的帳，則只紀錄「年/月/日」
+      const finalDateStr = (selectedSlashDate === todaySlashDate)
+        ? `${selectedSlashDate} ${getNowTimePart()}`
+        : selectedSlashDate;
+
       const newLog = {
-        date: getNowFormattedString(),
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        date: finalDateStr,
         type: currentMode,
         amount: amount,
         categoryOrNote: '',
@@ -1991,9 +2636,9 @@
       }
 
       appState.logs.unshift(newLog);
-      saveStateToLocal();
+      commitChangeWithVersion();
       renderAll();
-      resetRecordFormDefaults();
+      resetRecordFormOnEnter();
       switchTab('overview', document.querySelectorAll('.nav-tab')[0]);
     }
 
@@ -2002,6 +2647,7 @@
       if (!ok) return;
 
       appState.logs.unshift({
+        id: 'log_' + Date.now() + '_clear',
         date: getNowFormattedString(),
         type: '清空',
         amount: 0,
@@ -2012,7 +2658,15 @@
         memo: ''
       });
 
-      saveStateToLocal();
+      commitChangeWithVersion();
+      renderAll();
+    }
+
+    function deleteLogById(logId) {
+      const idx = appState.logs.findIndex(item => item.id === logId);
+      if (idx === -1) return;
+      appState.logs.splice(idx, 1);
+      commitChangeWithVersion();
       renderAll();
     }
 
@@ -2038,32 +2692,87 @@
       return { baseCat, combinedNote };
     }
 
-    function handleDeleteLatest() {
-      if (!appState.logs || appState.logs.length === 0) return;
-      const latest = appState.logs[0];
-      let desc = '';
-      if (latest.type === '清空') {
-        desc = '「預算週期重置（歸零）」';
-      } else if (latest.type === '收入') {
-        desc = `「${latest.categoryOrNote} +${latest.amount.toLocaleString()} 元」`;
-      } else {
-        const { baseCat, combinedNote } = parseExpenseDisplay(latest);
-        const noteText = combinedNote ? ` ${combinedNote}` : '';
-        desc = `「${baseCat}${noteText} -${latest.amount.toLocaleString()} 元」`;
+    // ========= 紀錄頁左滑刪除手勢綁定 =========
+    let currentOpenSwipeWrapper = null;
+
+    function closeAnyOpenSwipeItem(exceptWrapper) {
+      if (currentOpenSwipeWrapper && currentOpenSwipeWrapper !== exceptWrapper) {
+        const fg = currentOpenSwipeWrapper.querySelector('.log-item');
+        if (fg) fg.style.transform = 'translateX(0px)';
+        currentOpenSwipeWrapper.classList.remove('open', 'swiping');
+        currentOpenSwipeWrapper = null;
       }
+    }
 
-      const ok = confirm(`確定要刪除最新一筆紀錄 ${desc} 嗎？\n刪除後，總金額、可用餘額與消費結構將自動回復至該筆之前的狀態。`);
-      if (!ok) return;
+    function attachSwipeHandler(wrapper, fgEl, logId) {
+      let startX = 0;
+      let startY = 0;
+      let currentX = 0;
+      let baseOffset = 0;
+      let isDragging = false;
+      let isHorizontal = null;
 
-      appState.logs.shift();
-      saveStateToLocal();
-      renderAll();
+      fgEl.addEventListener('touchstart', function(e) {
+        if (!e.touches || e.touches.length !== 1) return;
+        closeAnyOpenSwipeItem(wrapper);
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        baseOffset = wrapper.classList.contains('open') ? -78 : 0;
+        currentX = baseOffset;
+        isDragging = true;
+        isHorizontal = null;
+        fgEl.style.transition = 'none';
+      }, { passive: true });
+
+      fgEl.addEventListener('touchmove', function(e) {
+        if (!isDragging || !e.touches || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+
+        if (isHorizontal === null) {
+          if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+            isHorizontal = Math.abs(dx) > Math.abs(dy);
+          }
+        }
+        if (!isHorizontal) return;
+
+        if (e.cancelable) e.preventDefault();
+        wrapper.classList.add('swiping');
+        currentX = Math.min(0, baseOffset + dx);
+        fgEl.style.transform = `translateX(${currentX}px)`;
+      }, { passive: false });
+
+      fgEl.addEventListener('touchend', function() {
+        if (!isDragging) return;
+        isDragging = false;
+        fgEl.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+        const fullWidth = wrapper.offsetWidth || 320;
+
+        // 左滑拉到底（超過寬度 45%）直接刪除該筆紀錄
+        if (currentX < -fullWidth * 0.45) {
+          fgEl.style.transform = `translateX(-${fullWidth}px)`;
+          setTimeout(() => {
+            deleteLogById(logId);
+          }, 160);
+        } else if (currentX < -38) {
+          // 輕滑露出「刪除」按鈕
+          fgEl.style.transform = 'translateX(-78px)';
+          wrapper.classList.add('open');
+          wrapper.classList.remove('swiping');
+          currentOpenSwipeWrapper = wrapper;
+        } else {
+          fgEl.style.transform = 'translateX(0px)';
+          wrapper.classList.remove('open', 'swiping');
+          if (currentOpenSwipeWrapper === wrapper) currentOpenSwipeWrapper = null;
+        }
+      });
     }
 
     // ========= 渲染紀錄頁 =========
     function renderHistory() {
       const listEl = document.getElementById('log-list');
       listEl.innerHTML = '';
+      currentOpenSwipeWrapper = null;
 
       const logs = appState.logs || [];
       if (logs.length === 0) {
@@ -2103,28 +2812,40 @@
       });
       if (currentBlock) blocks.push(currentBlock);
 
-      let lastAppendedLogRow = null;
+      let lastAppendedWrapper = null;
 
       blocks.forEach(block => {
         if (block.isClear) {
-          if (lastAppendedLogRow) {
-            lastAppendedLogRow.classList.add('no-bottom-border');
+          if (lastAppendedWrapper) {
+            lastAppendedWrapper.classList.add('no-bottom-border');
           }
+          const wrapper = document.createElement('div');
+          wrapper.className = 'swipe-item-wrapper clear-wrapper';
+
+          const delBg = document.createElement('div');
+          delBg.className = 'swipe-delete-bg';
+          delBg.textContent = '刪除';
+          delBg.onclick = () => deleteLogById(block.item.id);
+
           const div = document.createElement('div');
           div.className = 'log-item clear-event';
           div.innerHTML = `
             <span style="font-size:12px; font-weight:600; color:var(--muted); letter-spacing:0.5px;">預算週期重置（歸零）</span>
             <span class="log-date">${formatDateWithWeekday(block.item.date)}</span>
           `;
-          listEl.appendChild(div);
-          lastAppendedLogRow = null;
+
+          wrapper.appendChild(delBg);
+          wrapper.appendChild(div);
+          attachSwipeHandler(wrapper, div, block.item.id);
+          listEl.appendChild(wrapper);
+          lastAppendedWrapper = null;
           return;
         }
 
         const isDayFinished = (block.dayKey && block.dayKey < todayKey);
         if (isDayFinished) {
-          if (lastAppendedLogRow) {
-            lastAppendedLogRow.classList.add('no-bottom-border');
+          if (lastAppendedWrapper) {
+            lastAppendedWrapper.classList.add('no-bottom-border');
           }
           const divider = document.createElement('div');
           divider.className = 'day-summary-divider';
@@ -2140,10 +2861,18 @@
 
         block.items.forEach(item => {
           const formattedFullDate = formatDateWithWeekday(item.date);
+          const wrapper = document.createElement('div');
+          wrapper.className = 'swipe-item-wrapper';
+
+          const delBg = document.createElement('div');
+          delBg.className = 'swipe-delete-bg';
+          delBg.textContent = '刪除';
+          delBg.onclick = () => deleteLogById(item.id);
+
           const div = document.createElement('div');
+          div.className = 'log-item';
 
           if (item.type === '收入') {
-            div.className = 'log-item';
             div.innerHTML = `
               <div class="log-left">
                 <div class="log-title" style="color:var(--income);">
@@ -2157,7 +2886,6 @@
               </div>
             `;
           } else {
-            div.className = 'log-item';
             const { baseCat, combinedNote } = parseExpenseDisplay(item);
             const noteSpanHtml = combinedNote
               ? `<span class="log-note-inline">${combinedNote}</span>`
@@ -2179,14 +2907,18 @@
             `;
           }
 
-          listEl.appendChild(div);
-          lastAppendedLogRow = div;
+          wrapper.appendChild(delBg);
+          wrapper.appendChild(div);
+          attachSwipeHandler(wrapper, div, item.id);
+          listEl.appendChild(wrapper);
+          lastAppendedWrapper = wrapper;
         });
       });
     }
 
-    // ========= 分類 & 支付方式 完整管理（純前端同步更新歷史紀錄） =========
+    // ========= 分類 & 支付方式 完整管理 =========
     function openOptionModal(type) {
+      closeCalcKeyboard();
       currentEditingType = type;
       const isCategory = (type === 'category');
       const sourceList = isCategory ? appState.categories : appState.payments;
@@ -2285,7 +3017,6 @@
         appState.payments = finalList;
       }
 
-      // 若有改名，同步更新所有歷史紀錄與常用選項
       if (Object.keys(renameMap).length > 0) {
         appState.logs.forEach(item => {
           if (item.type === '支出') {
@@ -2319,12 +3050,13 @@
       }
 
       closeOptionModal();
-      saveStateToLocal();
+      commitChangeWithVersion();
       renderAll();
     }
 
     // ========= 常用選項：排序、點入編輯、新增、刪除 =========
     function openPresetManageModal() {
+      closeCalcKeyboard();
       tempPresets = (appState.presets || []).map(p => ({
         name: p.name,
         category: p.category,
@@ -2469,7 +3201,7 @@
       }));
       selectedPresetIndex = null;
       closePresetManageModal();
-      saveStateToLocal();
+      commitChangeWithVersion();
       renderAll();
     }
   </script>

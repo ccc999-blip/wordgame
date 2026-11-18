@@ -180,16 +180,14 @@
     .page.active {
       display: block;
     }
-    /* 概覽頁專用：全高彈性分佈，上半部中幅拉高且三行等距，下半部長方體在橫桿與導航列間完美置中 */
     #page-overview.active {
       display: flex;
       flex-direction: column;
       min-height: calc(100dvh - var(--top-bar-h) - var(--nav-total-space));
     }
 
-    /* ========= 1. 概覽頁（橫桿中幅下移 + 上方三行等距分散 + 下方長方體持續置中） ========= */
+    /* ========= 1. 概覽頁 ========= */
     .balance-box {
-      /* 中幅下移橫桿：給予上半部充裕高度，並讓內部三行與上下邊界等距分佈 */
       min-height: 186px;
       padding: 24px 0;
       border-bottom: 1px solid var(--border);
@@ -275,7 +273,6 @@
       margin-left: -2px;
     }
 
-    /* 概覽中間圖表容器：在「下移後的橫桿」與「底部切換類別欄」之間 1:1 垂直置中 */
     .overview-middle-wrap {
       flex: 1;
       display: flex;
@@ -394,7 +391,6 @@
     #page-record {
       padding-top: 14px;
     }
-    /* 讓支出/收入切換鈕層級高於計算機，點選切換時絕不關閉計算機 */
     .mode-switch {
       position: relative;
       z-index: 95;
@@ -465,7 +461,7 @@
       color: var(--text);
     }
 
-    /* 金額顯示框（固定高度，確保點擊計算機時頁面 0 位移、不跳動） */
+    /* 金額顯示框（固定高度不位移） */
     .amount-input-wrapper {
       position: relative;
       z-index: 95;
@@ -527,6 +523,12 @@
       font-weight: 500;
       color: var(--muted);
       pointer-events: none;
+    }
+
+    /* 當計算機開啟或剛收起的緩衝期間，鎖定下方區塊與日期選擇器，徹底防止穿透誤觸 */
+    .record-below-amount.calc-locked,
+    .record-below-amount.calc-locked * {
+      pointer-events: none !important;
     }
 
     /* 選擇日期區塊 */
@@ -950,44 +952,43 @@
       color: var(--surface);
     }
 
-    /* ========= 重新設計的計算機鍵盤（上緣對齊金額欄下方橫線、全比例放大按鍵、不跳動） ========= */
+    /* ========= 依附圖比例與配置重做的 5x4 計算機鍵盤（維持日系暖灰方格與色系） ========= */
     .calc-keyboard {
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
-      /* top 由 JS 動態對齊金額欄底線 */
-      z-index: 90;
+      /* 佔版面下半部約 43% 的黃金比例（與附圖相同高度感） */
+      height: calc(300px + env(safe-area-inset-bottom, 16px));
+      max-height: 45dvh;
+      min-height: 280px;
+      z-index: 92;
       background: var(--bg);
-      padding: 12px 20px calc(env(safe-area-inset-bottom, 12px) + 14px) 20px;
+      border-top: 1px solid var(--border-dark);
+      border-radius: 16px 16px 0 0;
+      padding: 14px 16px calc(env(safe-area-inset-bottom, 14px) + 12px) 16px;
       max-width: 520px;
       margin: 0 auto;
-      display: none;
+      box-shadow: 0 -6px 24px rgba(44, 44, 42, 0.08);
+      transform: translateY(105%);
+      pointer-events: none;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
       flex-direction: column;
     }
     .calc-keyboard.active {
-      display: flex;
+      transform: translateY(0);
+      pointer-events: auto;
     }
-    /* 左侧 3x4 (789 / 456 / 123 / AC 0 .) + 右側 1x6 (完成 ÷ × − + ⌫)，高度 100% 隨畫面比例填滿 */
-    .calc-body {
+    /* 5 欄 × 4 列等比例網格，完美對應附圖按鍵位置與大小 */
+    .calc-grid-5x4 {
       flex: 1;
-      display: grid;
-      grid-template-columns: 3fr 1fr;
-      gap: 10px;
       width: 100%;
       height: 100%;
-    }
-    .calc-left-pad {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       grid-template-rows: repeat(4, 1fr);
-      gap: 10px;
-    }
-    .calc-right-ops {
-      display: grid;
-      grid-template-columns: 1fr;
-      grid-template-rows: repeat(6, 1fr);
-      gap: 8px;
+      gap: 9px;
     }
     .calc-key {
       width: 100%;
@@ -996,7 +997,7 @@
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text);
-      font-size: 24px;
+      font-size: 21px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       display: flex;
@@ -1007,31 +1008,36 @@
     }
     .calc-key:active {
       background: var(--surface-sub);
-      transform: scale(0.97);
+      transform: scale(0.95);
     }
-    .calc-key.ac-key {
-      background: var(--surface-sub);
-      color: var(--expense);
-      font-size: 20px;
-      font-weight: 700;
-    }
+    /* 第 4 欄（÷ × + −）與 第 5 欄上方（AC、←）：次要微差色塊 */
     .calc-key.op {
       background: var(--surface-sub);
       color: var(--expense);
       font-size: 22px;
       font-weight: 600;
     }
-    .calc-key.del-x {
+    .calc-key.func {
       background: var(--surface-sub);
       color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
-    .calc-key.done-eq {
+    /* 右下角跨兩列的 OK / = 垂直長條大鍵 */
+    .calc-key.ok-tall {
+      grid-column: 5;
+      grid-row: 3 / span 2;
       background: var(--text);
       color: var(--surface);
       border-color: var(--text);
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 18px;
+      font-weight: 700;
       letter-spacing: 1px;
+    }
+    .calc-key.ok-tall:active {
+      opacity: 0.88;
+      transform: scale(0.97);
     }
 
     /* ========= iOS 風格底部滑出抽屜（每日支出總覽 Bottom Sheet） ========= */
@@ -1336,7 +1342,6 @@
   <main class="container">
     <!-- 1. 概覽頁 (預設) -->
     <div id="page-overview" class="page active">
-      <!-- 橫桿中幅下移，上方三行等距分散於橫桿之上 -->
       <div class="balance-box">
         <div class="balance-label">可用餘額 / 本輪預算</div>
         <div class="balance-numbers">
@@ -1355,7 +1360,6 @@
         </div>
       </div>
 
-      <!-- 下方長方體持續維持在橫桿與導航列之間置中 -->
       <div class="overview-middle-wrap">
         <div class="section-block">
           <div class="main-burn-block">
@@ -1387,7 +1391,7 @@
         <button type="button" id="btn-mode-inc" class="mode-btn income" onclick="setMode('收入')">收入</button>
       </div>
 
-      <!-- 金額欄（點擊開啟對齊底線的拉高計算機鍵盤，切換收支時鍵盤與算式常駐） -->
+      <!-- 金額欄 -->
       <div class="form-group" style="margin-bottom: 6px;">
         <div class="form-label-row">
           <span class="form-label">金額</span>
@@ -1399,74 +1403,77 @@
         </div>
       </div>
 
-      <!-- 選擇日期列 -->
-      <div class="date-picker-bar">
-        <div class="date-picker-left">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-          <span class="date-picker-label">記帳日期</span>
+      <!-- 金額欄下方的所有表單區（當計算機開啟與收起瞬間會自動鎖定 pointer-events，徹底阻絕點完成時誤觸後方日期） -->
+      <div id="record-below-amount" class="record-below-amount">
+        <!-- 選擇日期列 -->
+        <div class="date-picker-bar">
+          <div class="date-picker-left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span class="date-picker-label">記帳日期</span>
+          </div>
+          <div class="date-picker-right">
+            <span id="record-date-display" class="date-display-text"></span>
+            <span id="record-date-badge" class="date-today-tag">今日</span>
+          </div>
+          <input type="date" id="input-record-date" class="native-date-input" onchange="handleDateInputChange()">
         </div>
-        <div class="date-picker-right">
-          <span id="record-date-display" class="date-display-text"></span>
-          <span id="record-date-badge" class="date-today-tag">今日</span>
-        </div>
-        <input type="date" id="input-record-date" class="native-date-input" onchange="handleDateInputChange()">
-      </div>
 
-      <!-- 支出專屬欄位 -->
-      <div id="expense-fields">
-        <div class="expense-split-layout">
-          <div>
-            <div class="form-group">
-              <div class="form-label-row">
-                <span class="form-label">選取類別</span>
-                <button type="button" class="btn-text-action" onclick="openOptionModal('category')">編輯類別</button>
+        <!-- 支出專屬欄位 -->
+        <div id="expense-fields">
+          <div class="expense-split-layout">
+            <div>
+              <div class="form-group">
+                <div class="form-label-row">
+                  <span class="form-label">選取類別</span>
+                  <button type="button" class="btn-text-action" onclick="openOptionModal('category')">編輯類別</button>
+                </div>
+                <select id="select-category" class="select-box" onchange="clearPresetSelectionHighlight()"></select>
               </div>
-              <select id="select-category" class="select-box" onchange="clearPresetSelectionHighlight()"></select>
+
+              <div class="form-group">
+                <div class="form-label-row">
+                  <span class="form-label">支付方式</span>
+                  <button type="button" class="btn-text-action" onclick="openOptionModal('payment')">編輯類別</button>
+                </div>
+                <select id="select-payment" class="select-box"></select>
+              </div>
+
+              <div class="form-group" style="margin-bottom:0;">
+                <div class="form-label-row">
+                  <span class="form-label">說明（選填）</span>
+                </div>
+                <input type="text" id="input-expense-memo" class="input-boxed" placeholder="標記用途...">
+              </div>
             </div>
 
-            <div class="form-group">
+            <!-- 右側：常用選項欄 -->
+            <div class="preset-panel">
               <div class="form-label-row">
-                <span class="form-label">支付方式</span>
-                <button type="button" class="btn-text-action" onclick="openOptionModal('payment')">編輯類別</button>
+                <span class="form-label">常用選項</span>
+                <button type="button" class="btn-text-action" onclick="openPresetManageModal()">編輯</button>
               </div>
-              <select id="select-payment" class="select-box"></select>
-            </div>
-
-            <div class="form-group" style="margin-bottom:0;">
-              <div class="form-label-row">
-                <span class="form-label">說明（選填）</span>
-              </div>
-              <input type="text" id="input-expense-memo" class="input-boxed" placeholder="標記用途...">
+              <div id="preset-select-list" class="preset-select-list"></div>
             </div>
           </div>
+        </div>
 
-          <!-- 右側：常用選項欄 -->
-          <div class="preset-panel">
+        <!-- 收入專屬欄位 -->
+        <div id="income-fields" style="display:none; margin-bottom:16px;">
+          <div class="form-group">
             <div class="form-label-row">
-              <span class="form-label">常用選項</span>
-              <button type="button" class="btn-text-action" onclick="openPresetManageModal()">編輯</button>
+              <span class="form-label">說明（選填）</span>
             </div>
-            <div id="preset-select-list" class="preset-select-list"></div>
+            <input type="text" id="input-note" class="input-boxed" placeholder="例如：每週預算、零用錢">
           </div>
         </div>
-      </div>
 
-      <!-- 收入專屬欄位 -->
-      <div id="income-fields" style="display:none; margin-bottom:16px;">
-        <div class="form-group">
-          <div class="form-label-row">
-            <span class="form-label">說明（選填）</span>
-          </div>
-          <input type="text" id="input-note" class="input-boxed" placeholder="例如：每週預算、零用錢">
-        </div>
+        <button type="button" class="btn-submit" onclick="submitRecord()">確認送出</button>
       </div>
-
-      <button type="button" class="btn-submit" onclick="submitRecord()">確認送出</button>
     </div>
 
     <!-- 3. 紀錄頁 -->
@@ -1484,43 +1491,40 @@
     </div>
   </nav>
 
-  <!-- 重新設計的拉高版計算機鍵盤（上緣直接對齊金額欄下方橫線，按鍵等比例放大） -->
+  <!-- 依附圖比例與按鍵位置設計的 5×4 計算機鍵盤（維持日系暖灰與微圓角方格風格） -->
   <div id="calc-keyboard" class="calc-keyboard">
-    <div class="calc-body">
-      <!-- 左側 3x4 九宮格數字 + AC（取代00） + 0 + . -->
-      <div class="calc-left-pad">
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '7')">7</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '8')">8</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '9')">9</button>
+    <div class="calc-grid-5x4">
+      <!-- 第 1 列：7 8 9 ÷ AC -->
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '7')">7</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '8')">8</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '9')">9</button>
+      <button type="button" class="calc-key op" onclick="handleCalcPad(event, '÷')">÷</button>
+      <button type="button" class="calc-key func" onclick="handleCalcPad(event, 'AC')">AC</button>
 
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '4')">4</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '5')">5</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '6')">6</button>
+      <!-- 第 2 列：4 5 6 × ← -->
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '4')">4</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '5')">5</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '6')">6</button>
+      <button type="button" class="calc-key op" onclick="handleCalcPad(event, '×')">×</button>
+      <button type="button" class="calc-key func" onclick="handleCalcPad(event, 'BACK')" title="退格刪除">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
 
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '1')">1</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '2')">2</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '3')">3</button>
+      <!-- 第 3 列：1 2 3 + OK(跨3、4兩列) -->
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '1')">1</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '2')">2</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '3')">3</button>
+      <button type="button" class="calc-key op" onclick="handleCalcPad(event, '+')">+</button>
+      <button type="button" id="btn-calc-done-eq" class="calc-key ok-tall" onclick="handleCalcPad(event, 'DONE_EQ')">OK</button>
 
-        <button type="button" class="calc-key ac-key" onpointerdown="handleCalcPad(event, 'AC')">AC</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '0')">0</button>
-        <button type="button" class="calc-key" onpointerdown="handleCalcPad(event, '.')">.</button>
-      </div>
-
-      <!-- 右側運算列：完成(放大同尺寸) + ÷ × − + + 退格叉叉鍵(取代原本的=) -->
-      <div class="calc-right-ops">
-        <button type="button" id="btn-calc-done-eq" class="calc-key done-eq" onpointerdown="handleCalcPad(event, 'DONE_EQ')">完成</button>
-        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '÷')">÷</button>
-        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '×')">×</button>
-        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '-')">−</button>
-        <button type="button" class="calc-key op" onpointerdown="handleCalcPad(event, '+')">+</button>
-        <button type="button" class="calc-key del-x" onpointerdown="handleCalcPad(event, 'BACK')" title="刪除數字">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
-            <line x1="18" y1="9" x2="12" y2="15"></line>
-            <line x1="12" y1="9" x2="18" y2="15"></line>
-          </svg>
-        </button>
-      </div>
+      <!-- 第 4 列：00 0 . − (第5格由上方OK延伸佔用) -->
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '00')">00</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '0')">0</button>
+      <button type="button" class="calc-key" onclick="handleCalcPad(event, '.')">.</button>
+      <button type="button" class="calc-key op" onclick="handleCalcPad(event, '-')">−</button>
     </div>
   </div>
 
@@ -1626,9 +1630,10 @@
     let tempPresets = [];
     let editingPresetIdx = -1;
 
-    // 計算機狀態：calcInput 為目前打在金額欄上的字串（打完才計算），calcLastFormula 為上一段算完留存的算式小字
+    // 計算機狀態
     let calcInput = '';
     let calcLastFormula = '';
+    let unlockBelowTimer = null;
 
     const TAB_TITLES = {
       overview: { zh: '概覽', en: 'Overview' },
@@ -1728,42 +1733,41 @@
       }
     }
 
-    // ========= 全新拉高版計算機鍵盤邏輯（打在金額欄上、打完才算、絕不跳動） =========
-    function alignCalcKeyboardToAmountLine() {
-      const amountBox = document.getElementById('amount-box');
-      const kb = document.getElementById('calc-keyboard');
-      if (!amountBox || !kb) return;
-      const rect = amountBox.getBoundingClientRect();
-      // 將計算機鍵盤的上緣直接對齊金額欄下方的橫線
-      kb.style.top = Math.round(rect.bottom) + 'px';
-    }
-
+    // ========= 5×4 計算機鍵盤邏輯（防穿透誤觸 + 附圖比例配置） =========
     function openCalcKeyboard() {
-      window.scrollTo(0, 0);
+      if (unlockBelowTimer) {
+        clearTimeout(unlockBelowTimer);
+        unlockBelowTimer = null;
+      }
       const kb = document.getElementById('calc-keyboard');
       const amountBox = document.getElementById('amount-box');
+      const belowArea = document.getElementById('record-below-amount');
+
+      // 開啟計算機期間鎖定下方日期與選單，防止任何穿透點擊
+      if (belowArea) belowArea.classList.add('calc-locked');
       amountBox.classList.add('calc-open');
       kb.classList.add('active');
-      alignCalcKeyboardToAmountLine();
       updateCalcDisplay();
     }
 
     function closeCalcKeyboard() {
-      // 關閉鍵盤時，若有未結算的算式，自動幫使用者算出最終結果
       if (hasPendingOperator(calcInput)) {
         evaluateCurrentExpression();
       }
-      document.getElementById('calc-keyboard').classList.remove('active');
-      document.getElementById('amount-box').classList.remove('calc-open');
-      updateCalcDisplay();
-    }
-
-    window.addEventListener('resize', function() {
       const kb = document.getElementById('calc-keyboard');
-      if (kb && kb.classList.contains('active')) {
-        alignCalcKeyboardToAmountLine();
-      }
-    });
+      const amountBox = document.getElementById('amount-box');
+      const belowArea = document.getElementById('record-below-amount');
+
+      kb.classList.remove('active');
+      amountBox.classList.remove('calc-open');
+      updateCalcDisplay();
+
+      // 延遲 320ms 後才解除後方日期與選單的點擊鎖定，100% 吸收掉殘留的觸控事件
+      if (unlockBelowTimer) clearTimeout(unlockBelowTimer);
+      unlockBelowTimer = setTimeout(() => {
+        if (belowArea) belowArea.classList.remove('calc-locked');
+      }, 320);
+    }
 
     function hasPendingOperator(str) {
       return /[+\-×÷]/.test(String(str || ''));
@@ -1800,7 +1804,6 @@
 
     function formatCalcInputForDisplay(raw) {
       if (!raw) return '0';
-      // 將算式中的每段純數字加上千分位逗號，運算子維持原樣直接顯示在金額欄上
       return String(raw).replace(/\d+(\.\d+)?/g, function(numStr) {
         const parts = numStr.split('.');
         const intFormatted = Number(parts[0]).toLocaleString();
@@ -1830,10 +1833,10 @@
         }
       }
 
-      // 若目前算式含有加減乘除且結尾是數字，右上鍵顯示「=」讓使用者一鍵算出；否則顯示「完成」收起鍵盤
+      // 若算式含有運算子且結尾是數字，右下角大鍵顯示「=」；否則顯示「OK」
       if (doneEqBtn) {
         const isReadyToEqual = hasPendingOperator(calcInput) && /\d$/.test(calcInput);
-        doneEqBtn.textContent = isReadyToEqual ? '=' : '完成';
+        doneEqBtn.textContent = isReadyToEqual ? '=' : 'OK';
       }
     }
 
@@ -1899,12 +1902,23 @@
         return;
       }
 
-      // 數字 0-9
+      // 數字 0-9 或 00
       if (calcLastFormula && !hasPendingOperator(calcInput)) {
         calcLastFormula = '';
       }
       const parts = calcInput.split(/[+\-×÷]/);
       const curNum = parts[parts.length - 1];
+
+      if (key === '00') {
+        if (!curNum || curNum === '0') {
+          if (!curNum) calcInput += '0';
+        } else if (curNum.replace('.', '').length <= 7) {
+          calcInput += '00';
+        }
+        updateCalcDisplay();
+        return;
+      }
+
       if (curNum === '0') {
         calcInput = calcInput.slice(0, -1) + key;
       } else if (curNum.replace('.', '').length < 9) {
@@ -1919,7 +1933,7 @@
       updateCalcDisplay();
     }
 
-    // ========= 核心嚴謹資料重算與版本時光機（修復重置與今日支出/上一步下一步的所有連動） =========
+    // ========= 核心嚴謹資料重算與版本時光機 =========
     function recalculateState() {
       if (!Array.isArray(appState.categories) || appState.categories.length === 0) {
         appState.categories = ['餐飲', '娛樂（遊戲）', '娛樂（其他）', '網路'];
@@ -1945,13 +1959,11 @@
         if (!item.id) {
           item.id = 'log_' + (Date.now() - i) + '_' + i;
         }
-        // 為缺少 seq 的歷史資料賦予嚴格遞增序號（越上面的越新，seq 越大）
         if (typeof item.seq !== 'number') {
           item.seq = totalLen - i;
         }
       });
 
-      // 穩定排序：先比對日期字串（YYYY/MM/DD）由新到舊；同一天內嚴格依照 seq 由大到小（最新操作永遠在最上面，絕不因反覆重算而錯位）
       appState.logs.sort((a, b) => {
         const dayA = String(a.date || '').split(' ')[0];
         const dayB = String(b.date || '').split(' ')[0];
@@ -1961,7 +1973,6 @@
         return (Number(b.seq) || 0) - (Number(a.seq) || 0);
       });
 
-      // 反轉為時間軸順序（由舊到新）逐步計算每筆紀錄的當下餘額、本輪總預算與最新重置點
       const chronological = [...appState.logs].reverse();
       let runningRem = 0;
       let runningTot = 0;
@@ -1992,7 +2003,6 @@
       appState.currentRemaining = runningRem;
       appState.currentTotal = runningTot;
 
-      // 僅統計「最後一次清空（重置）之後」的本輪分類支出
       const pieStats = {};
       for (let i = lastClearIdx + 1; i < chronological.length; i++) {
         const item = chronological[i];
@@ -2006,8 +2016,6 @@
       appState.logs = chronological.reverse();
     }
 
-    // 計算「今日支出」：嚴格只計算「最後一次清空（重置）之後」且日期為今天的支出！
-    // 如此一來，當執行重置、或透過「上一步 / 下一步」跨越重置點時，今日支出都會 100% 同步歸零或回復
     function calculateTodaySpend() {
       const todayPrefix = getTodayDateKey();
       let sum = 0;
@@ -2015,7 +2023,6 @@
       for (let i = 0; i < logs.length; i++) {
         const item = logs[i];
         if (item.type === '清空') {
-          // 因為 logs 是由新到舊排列，遇到第一個「清空」就代表更早之前的紀錄屬於上一輪週期，立即停止累加
           break;
         }
         if (item.type === '支出' && String(item.date || '').startsWith(todayPrefix)) {
@@ -2120,7 +2127,6 @@
             historyPointer = typeof parsedHist.pointer === 'number'
               ? Math.min(Math.max(0, parsedHist.pointer), historyStack.length - 1)
               : historyStack.length - 1;
-            // 直接以當前版本指標的快照作為唯一真實來源，確保重整網頁後與上一步/下一步狀態 100% 同步
             applySnapshotObject(historyStack[historyPointer]);
             updateUndoRedoButtonsUI();
             return;
@@ -2148,7 +2154,7 @@
       updateUndoRedoButtonsUI();
     }
 
-    // ========= 匯出与匯入功能 =========
+    // ========= 匯出與匯入功能 =========
     function exportBackupFile() {
       recalculateState();
       const backupPayload = {
@@ -2292,7 +2298,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 切換「支出 / 收入」：完全保留目前輸入到一半的金額算式、已選日期，且若計算機鍵盤開著也保持開啟不收回！
+    // 切換「支出 / 收入」：完全保留目前輸入到一半的金額算式、已選日期，且若計算機鍵盤開著也保持開啟不收回
     function setMode(mode) {
       currentMode = mode;
       const btnExp = document.getElementById('btn-mode-exp');
@@ -2310,11 +2316,6 @@
         btnExp.classList.remove('active');
         expFields.style.display = 'none';
         incFields.style.display = 'block';
-      }
-
-      const kb = document.getElementById('calc-keyboard');
-      if (kb && kb.classList.contains('active')) {
-        alignCalcKeyboardToAmountLine();
       }
     }
 

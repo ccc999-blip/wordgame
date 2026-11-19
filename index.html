@@ -23,6 +23,7 @@
       --border-dark: #CCC9C0;  /* 強調底線色 */
       --expense: #8C4A32;      /* 高級古銅深褐 (支出 / 負數) */
       --income: #385E4C;       /* 霧面墨綠 (收入 / 盈餘) */
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       --top-bar-h: calc(env(safe-area-inset-top, 20px) + 68px);
       --nav-bottom: calc(env(safe-area-inset-bottom, 10px) + 18px);
       --nav-total-space: calc(env(safe-area-inset-bottom, 10px) + 66px);
@@ -284,7 +285,7 @@
       margin-left: -2px;
     }
 
-    /* 存錢筒入口膠囊（簡約小豬撲滿圖標 + 即時餘額） */
+    /* 存錢筒入口膠囊 */
     .piggy-bank-btn {
       display: inline-flex;
       align-items: center;
@@ -517,7 +518,6 @@
       color: var(--text);
     }
 
-    /* 金額顯示框（固定高度不位移） */
     .amount-input-wrapper {
       position: relative;
       z-index: 95;
@@ -592,7 +592,6 @@
       pointer-events: none !important;
     }
 
-    /* 選擇日期區塊 */
     .date-picker-bar {
       display: flex;
       justify-content: space-between;
@@ -720,7 +719,6 @@
       }
     }
 
-    /* 四欄平衡配置 */
     .expense-left-col {
       display: flex;
       flex-direction: column;
@@ -1121,6 +1119,431 @@
       margin-left: 3px;
     }
 
+    /* ========= 4. 統計頁（單頁卡片流） ========= */
+    #page-stats {
+      padding-top: 10px;
+      padding-bottom: 18px;
+    }
+    .stats-sticky-controls {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(246, 245, 240, 0.94);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px 0 10px 0;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .stats-seg-row {
+      position: relative;
+      display: flex;
+      background: var(--surface-sub);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5px;
+      gap: 3px;
+    }
+    .seg-slider-bg {
+      position: absolute;
+      top: 2.5px;
+      bottom: 2.5px;
+      left: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(44, 44, 42, 0.04);
+      pointer-events: none;
+      z-index: 0;
+      transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1), width 0.36s cubic-bezier(0.32, 0.72, 0, 1);
+      will-change: transform, width;
+    }
+    .stats-seg-btn {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.22s ease;
+    }
+    .stats-seg-btn.active {
+      color: var(--text);
+    }
+
+    .stats-kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 10px 0 12px 0;
+    }
+    .stats-kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 8px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .stats-kpi-label {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .stats-kpi-val {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(11.5px, 3.2vw, 14.5px);
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .stats-kpi-val.expense { color: var(--expense); }
+    .stats-kpi-val.income { color: var(--income); }
+    .stats-kpi-sub {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 10px;
+      letter-spacing: -0.02em;
+      color: var(--muted-light);
+      white-space: nowrap;
+    }
+
+    .stats-card-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .stats-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 14px 12px 14px;
+    }
+    .stats-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .stats-card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.2px;
+    }
+    .stats-card-sub {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .stats-legend-inline {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 11px;
+      color: var(--muted);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .stats-legend-inline span {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .legend-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      margin-right: 3px;
+      vertical-align: middle;
+    }
+    .stats-svg-wrap {
+      width: 100%;
+      overflow: hidden;
+    }
+    .stats-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .stats-detail-box {
+      margin-top: 10px;
+      padding: 9px 10px;
+      background: var(--surface-sub);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text);
+      display: none;
+    }
+    .stats-detail-box.active {
+      display: block;
+    }
+    .stats-detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .stats-detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .stats-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .stats-mini-toggle {
+      position: relative;
+      display: inline-flex;
+      background: var(--surface-sub);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .stats-mini-toggle .seg-slider-bg {
+      top: 2px;
+      bottom: 2px;
+      border-radius: 4px;
+    }
+    .stats-mini-btn {
+      position: relative;
+      z-index: 1;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: color 0.22s ease;
+    }
+    .stats-mini-btn.active {
+      color: var(--text);
+    }
+
+    /* 排行橫向進度條 */
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .rank-row {
+      cursor: pointer;
+      padding: 2px 0;
+    }
+    .rank-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 12.5px;
+      margin-bottom: 4px;
+    }
+    .rank-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .rank-val {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .rank-val b {
+      color: var(--expense);
+      font-weight: 600;
+    }
+    .rank-track {
+      width: 100%;
+      height: 8px;
+      background: var(--surface-sub);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .rank-fill {
+      height: 100%;
+      background: var(--expense);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    /* 歷輪清存歸檔對比列表 */
+    .cycle-archive-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .cycle-archive-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      gap: 8px;
+    }
+    .cycle-archive-dates {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .cycle-archive-meta {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .cycle-archive-rem {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 13.5px;
+      font-weight: 700;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .cycle-archive-rem.income { color: var(--income); }
+    .cycle-archive-rem.expense { color: var(--expense); }
+
+    /* ========= 統計類別明細全螢幕彈窗 ========= */
+    .stats-detail-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 98;
+      display: none;
+      flex-direction: column;
+      will-change: transform;
+      box-shadow: -8px 0 24px rgba(44, 44, 42, 0.08);
+    }
+    .stats-detail-modal-overlay.active {
+      display: flex;
+    }
+    .stats-detail-header {
+      padding-top: calc(env(safe-area-inset-top, 20px) + 22px);
+      padding-bottom: 12px;
+      padding-left: 24px;
+      padding-right: 24px;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg);
+      flex-shrink: 0;
+    }
+    .stats-detail-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .stats-detail-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+    .stats-detail-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stats-detail-summary {
+      text-align: right;
+      flex-shrink: 0;
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .stats-detail-total {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--expense);
+    }
+    .stats-detail-count {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .stats-detail-dir-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 6px 24px 2px 24px;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      flex-shrink: 0;
+    }
+    .btn-sort-dir {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 26px;
+      padding: 0 9px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-sort-dir:active {
+      background: var(--surface-sub);
+      color: var(--text);
+      transform: scale(0.96);
+    }
+    .stats-detail-scroll {
+      flex: 1;
+      overflow-y: auto;
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 6px 24px calc(env(safe-area-inset-bottom, 16px) + 28px) 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+
     /* ========= 存錢筒全螢幕頁面 ========= */
     .piggy-modal-overlay {
       position: fixed;
@@ -1129,6 +1552,8 @@
       z-index: 98;
       display: none;
       flex-direction: column;
+      will-change: transform;
+      box-shadow: -8px 0 24px rgba(44, 44, 42, 0.08);
     }
     .piggy-modal-overlay.active {
       display: flex;
@@ -1176,7 +1601,7 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* ========= 底部固定浮動膠囊導航列 ========= */
+    /* ========= 底部固定浮動膠囊導航列（四分頁） ========= */
     .bottom-nav-wrap {
       position: fixed;
       bottom: var(--nav-bottom);
@@ -1185,21 +1610,21 @@
       z-index: 60;
       display: flex;
       justify-content: center;
-      padding: 0 24px;
+      padding: 0 18px;
       pointer-events: none;
     }
     .bottom-nav {
       pointer-events: auto;
       display: flex;
       width: 100%;
-      max-width: 340px;
+      max-width: 376px;
       background: rgba(253, 252, 249, 0.94);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-dark);
       border-radius: 999px;
       padding: 4px;
-      gap: 4px;
+      gap: 3px;
     }
     .nav-tab {
       flex: 1;
@@ -1207,11 +1632,12 @@
       background: transparent;
       padding: 10px 0;
       border-radius: 999px;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
-      letter-spacing: 1px;
+      letter-spacing: 0.6px;
       color: var(--muted);
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.2s ease;
     }
     .nav-tab.active {
@@ -1556,7 +1982,7 @@
       <span id="header-title-en" class="page-title-en">Overview</span>
     </div>
     <div class="top-actions">
-      <!-- 概覽與記帳頁顯示：匯出 + 匯入 -->
+      <!-- 概覽、記帳、統計頁顯示：匯出 + 匯入 -->
       <div id="top-io-group" class="top-btn-group">
         <button type="button" class="btn-top-tool" onclick="exportBackupFile()" title="匯出備份檔">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1798,7 +2224,146 @@
         <div id="wallet-search-list" class="log-list"></div>
       </div>
     </div>
+
+    <!-- 4. 統計頁（單頁卡片流） -->
+    <div id="page-stats" class="page">
+      <div class="stats-sticky-controls">
+        <div class="stats-seg-row" id="stats-ledger-switch">
+          <div class="seg-slider-bg"></div>
+          <button type="button" class="stats-seg-btn active" onclick="setStatsFilter('ledger', 'wallet', this)">錢包</button>
+          <button type="button" class="stats-seg-btn" onclick="setStatsFilter('ledger', 'piggy', this)">存錢筒</button>
+          <button type="button" class="stats-seg-btn" onclick="setStatsFilter('ledger', 'all', this)">總資產合併</button>
+        </div>
+        <div class="stats-seg-row" id="stats-range-switch">
+          <div class="seg-slider-bg"></div>
+          <button type="button" class="stats-seg-btn active" onclick="setStatsFilter('range', 'cycle', this)">本輪</button>
+          <button type="button" class="stats-seg-btn" onclick="setStatsFilter('range', '30d', this)">近30天</button>
+          <button type="button" class="stats-seg-btn" onclick="setStatsFilter('range', '6m', this)">近6個月</button>
+          <button type="button" class="stats-seg-btn" onclick="setStatsFilter('range', 'all', this)">全部</button>
+        </div>
+      </div>
+
+      <!-- 核心指標摘要條 -->
+      <div class="stats-kpi-strip">
+        <div class="stats-kpi-card">
+          <span class="stats-kpi-label">日均支出</span>
+          <span id="kpi-avg-spend" class="stats-kpi-val expense">0 元</span>
+          <span id="kpi-avg-sub" class="stats-kpi-sub">0 天區間</span>
+        </div>
+        <div class="stats-kpi-card">
+          <span class="stats-kpi-label">最高單日</span>
+          <span id="kpi-peak-spend" class="stats-kpi-val expense">0 元</span>
+          <span id="kpi-peak-date" class="stats-kpi-sub">尚無資料</span>
+        </div>
+        <div class="stats-kpi-card">
+          <span class="stats-kpi-label">結餘／儲蓄率</span>
+          <span id="kpi-save-rate" class="stats-kpi-val income">0%</span>
+          <span id="kpi-net-sub" class="stats-kpi-sub">淨額 0 元</span>
+        </div>
+      </div>
+
+      <!-- 單頁卡片流 -->
+      <div class="stats-card-feed">
+        <!-- 1. 類別 / 支付方式排行橫向進度條（置頂） -->
+        <section class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-title">支出分佈排行</span>
+            <div class="stats-mini-toggle" id="stats-rank-switch">
+              <div class="seg-slider-bg"></div>
+              <button type="button" id="rank-btn-cat" class="stats-mini-btn active" onclick="setStatsRankMode('category')">類別</button>
+              <button type="button" id="rank-btn-pay" class="stats-mini-btn" onclick="setStatsRankMode('payment')">支付方式</button>
+            </div>
+          </div>
+          <div id="stats-rank-list" class="rank-list"></div>
+        </section>
+
+        <!-- 2. 每日 / 每月收支趨勢長條圖（含均線） -->
+        <section class="stats-card">
+          <div class="stats-card-header">
+            <span id="trend-card-title" class="stats-card-title">每日收支趨勢</span>
+            <div class="stats-legend-inline">
+              <span><i class="legend-dot" style="background:var(--income);"></i>收入</span>
+              <span><i class="legend-dot" style="background:var(--expense);"></i>支出</span>
+              <span><i class="legend-dot" style="background:var(--text);"></i>均線</span>
+            </div>
+          </div>
+          <div id="stats-trend-svg-wrap" class="stats-svg-wrap"></div>
+          <div id="stats-trend-detail" class="stats-detail-box"></div>
+        </section>
+
+        <!-- 3. 雙帳本淨資產成長折線／面積圖 -->
+        <section class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-title">雙帳本淨資產走勢</span>
+            <div class="stats-legend-inline">
+              <span><i class="legend-dot" style="background:var(--income);"></i>存錢筒</span>
+              <span><i class="legend-dot" style="background:var(--expense);"></i>錢包</span>
+            </div>
+          </div>
+          <div id="stats-networth-svg-wrap" class="stats-svg-wrap"></div>
+          <div id="stats-networth-detail" class="stats-detail-box"></div>
+        </section>
+
+        <!-- 4. 週一至週日消費習慣分佈長條圖 -->
+        <section class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-title">週一至週日消費習慣</span>
+            <span id="weekday-peak-hint" class="stats-card-sub">點擊長條看平均</span>
+          </div>
+          <div id="stats-weekday-svg-wrap" class="stats-svg-wrap"></div>
+          <div id="stats-weekday-detail" class="stats-detail-box"></div>
+        </section>
+
+        <!-- 5. 歷輪「清存」結算歸檔對比 -->
+        <section class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-title">歷輪「清存」結算歸檔</span>
+            <span id="cycle-archive-count" class="stats-card-sub">0 輪</span>
+          </div>
+          <div id="stats-cycle-archive-list" class="cycle-archive-list"></div>
+        </section>
+      </div>
+    </div>
   </main>
+
+  <!-- 統計頁點擊類別／支付方式彈出的「類紀錄頁」明細視窗 -->
+  <div id="stats-detail-modal" class="stats-detail-modal-overlay">
+    <header class="stats-detail-header">
+      <div class="stats-detail-top-row">
+        <div class="stats-detail-title-group">
+          <button type="button" class="btn-piggy-back" onclick="closeStatsDetailModal()" title="關閉明細">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <span id="stats-detail-title" class="stats-detail-name">類別明細</span>
+        </div>
+        <div class="stats-detail-summary">
+          <div id="stats-detail-total" class="stats-detail-total">0 元</div>
+          <div id="stats-detail-count" class="stats-detail-count">0 筆</div>
+        </div>
+      </div>
+      <div class="stats-seg-row" id="stats-detail-sort-switch">
+        <div class="seg-slider-bg"></div>
+        <button type="button" id="stats-sort-date" class="stats-seg-btn active" onclick="setStatsDetailSortField('date')">依照時間</button>
+        <button type="button" id="stats-sort-amt" class="stats-seg-btn" onclick="setStatsDetailSortField('amount')">依照金額</button>
+      </div>
+    </header>
+    <div class="stats-detail-dir-row">
+      <button type="button" id="btn-stats-sort-dir" class="btn-sort-dir" onclick="toggleStatsDetailSortDir()" title="切換升冪／降冪排列">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="7 8 7 19"></polyline>
+          <polyline points="3 12 7 8 11 12"></polyline>
+          <polyline points="17 16 17 5"></polyline>
+          <polyline points="13 12 17 16 21 12"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div id="stats-detail-scroll" class="stats-detail-scroll">
+      <div id="stats-detail-list" class="log-list"></div>
+    </div>
+  </div>
 
   <!-- 存錢筒獨立全螢幕紀錄頁（頂端僅左側返回鍵，無右側動作按鈕） -->
   <div id="piggy-modal" class="piggy-modal-overlay">
@@ -1843,12 +2408,13 @@
     </div>
   </div>
 
-  <!-- 底部固定浮動膠囊導航列 -->
+  <!-- 底部固定浮動膠囊導航列（概覽 / 記帳 / 紀錄 / 統計） -->
   <nav class="bottom-nav-wrap">
     <div class="bottom-nav">
       <button type="button" class="nav-tab active" onclick="switchTab('overview', this)">概覽</button>
       <button type="button" class="nav-tab" onclick="switchTab('record', this)">記帳</button>
       <button type="button" class="nav-tab" onclick="switchTab('history', this)">紀錄</button>
+      <button type="button" class="nav-tab" onclick="switchTab('stats', this)">統計</button>
     </div>
   </nav>
 
@@ -1985,7 +2551,8 @@
       pieStats: {},
       logs: [],
       piggyRemaining: 0,
-      piggyLogs: []
+      piggyLogs: [],
+      cycleSummaries: []
     };
 
     let historyStack = [];
@@ -2005,6 +2572,19 @@
     let walletSearchState = { active: false, query: '', tab: '支出' };
     let piggySearchState = { active: false, query: '', tab: '支出' };
 
+    // 統計頁狀態
+    let statsState = {
+      ledger: 'wallet',   // 'wallet' | 'piggy' | 'all'
+      range: 'cycle',     // 'cycle' | '30d' | '6m' | 'all'
+      rankMode: 'category'// 'category' | 'payment'
+    };
+    let statsDetailState = {
+      open: false,
+      rankName: '',
+      sortField: 'date',
+      sortDir: 'desc'
+    };
+
     // 計算機狀態
     let calcInput = '';
     let calcLastFormula = '';
@@ -2013,7 +2593,8 @@
     const TAB_TITLES = {
       overview: { zh: '概覽', en: 'Overview' },
       record:   { zh: '記帳', en: 'Record' },
-      history:  { zh: '紀錄', en: 'History' }
+      history:  { zh: '紀錄', en: 'History' },
+      stats:    { zh: '統計', en: 'Stats' }
     };
 
     const EARTH_PALETTE = [
@@ -2077,12 +2658,24 @@
       return `${getTodayDateKey()} ${getNowTimePart()}`;
     }
 
+    function parseDateKeyToObj(dayKey) {
+      const parts = String(dayKey || '').split('/');
+      if (parts.length !== 3) return null;
+      const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function formatObjToDateKey(dt) {
+      const yyyy = dt.getFullYear();
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getDate()).padStart(2, '0');
+      return `${yyyy}/${mm}/${dd}`;
+    }
+
     function getWeekdayFromDatePart(datePart) {
       if (!datePart) return '';
-      const parts = datePart.split('/');
-      if (parts.length !== 3) return '';
-      const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-      if (isNaN(dt.getTime())) return '';
+      const dt = parseDateKeyToObj(datePart);
+      if (!dt) return '';
       return WEEKDAY_NAMES[dt.getDay()];
     }
 
@@ -2407,11 +3000,51 @@
       if (!Array.isArray(appState.piggyLogs)) {
         appState.piggyLogs = [];
       }
+      if (!Array.isArray(appState.cycleSummaries)) {
+        appState.cycleSummaries = [];
+      }
 
-      // 錢包重算
+      // 錢包重算（同步動態重建 cycleSummaries 週期歸檔，確保刪除紀錄／刪除清存／上一步皆完全一致）
       const walletRes = sortAndComputeLogs(appState.logs, false);
       appState.currentRemaining = walletRes.runningRem;
       appState.currentTotal = walletRes.runningTot;
+
+      const rebuiltCycles = [];
+      let cStart = '', cEnd = '', cBudget = 0, cExpense = 0, cRem = 0;
+      walletRes.chronological.forEach(item => {
+        if (item.type === '清空') {
+          const settledDay = String(item.date || '').split(' ')[0] || '';
+          rebuiltCycles.push({
+            id: item.cycleId || ('cycle_' + item.id),
+            startDate: cStart || settledDay,
+            endDate: cEnd || settledDay,
+            totalBudget: cBudget,
+            totalExpense: cExpense,
+            remaining: cRem,
+            settledAt: item.date || ''
+          });
+          cStart = '';
+          cEnd = '';
+          cBudget = 0;
+          cExpense = 0;
+          cRem = 0;
+        } else {
+          const dk = String(item.date || '').split(' ')[0] || '';
+          const amt = Math.abs(Number(item.amount) || 0);
+          if (dk) {
+            if (!cStart || dk < cStart) cStart = dk;
+            if (!cEnd || dk > cEnd) cEnd = dk;
+          }
+          if (item.type === '收入') {
+            cBudget += amt;
+            cRem += amt;
+          } else if (item.type === '支出') {
+            cExpense += amt;
+            cRem -= amt;
+          }
+        }
+      });
+      appState.cycleSummaries = rebuiltCycles.reverse();
 
       const pieStats = {};
       for (let i = walletRes.lastClearIdx + 1; i < walletRes.chronological.length; i++) {
@@ -2464,7 +3097,8 @@
         payments: appState.payments,
         presets: appState.presets,
         logs: appState.logs,
-        piggyLogs: appState.piggyLogs
+        piggyLogs: appState.piggyLogs,
+        cycleSummaries: appState.cycleSummaries
       }));
       if (viewContext) {
         snap.viewContext = JSON.parse(JSON.stringify(viewContext));
@@ -2479,6 +3113,7 @@
       appState.presets = JSON.parse(JSON.stringify(snap.presets || []));
       appState.logs = JSON.parse(JSON.stringify(snap.logs || []));
       appState.piggyLogs = JSON.parse(JSON.stringify(snap.piggyLogs || []));
+      appState.cycleSummaries = JSON.parse(JSON.stringify(snap.cycleSummaries || []));
       recalculateState();
     }
 
@@ -2489,7 +3124,8 @@
           payments: appState.payments,
           presets: appState.presets,
           logs: appState.logs,
-          piggyLogs: appState.piggyLogs
+          piggyLogs: appState.piggyLogs,
+          cycleSummaries: appState.cycleSummaries
         }));
         localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify({
           stack: historyStack,
@@ -2519,6 +3155,17 @@
       pushHistoryStep(viewContext);
     }
 
+    function syncStatsFilterButtonsUI() {
+      const ledgerMap = { wallet: 0, piggy: 1, all: 2 };
+      const rangeMap = { cycle: 0, '30d': 1, '6m': 2, all: 3 };
+      const lBtns = document.querySelectorAll('#stats-ledger-switch .stats-seg-btn');
+      lBtns.forEach((b, i) => b.classList.toggle('active', i === ledgerMap[statsState.ledger]));
+      const rBtns = document.querySelectorAll('#stats-range-switch .stats-seg-btn');
+      rBtns.forEach((b, i) => b.classList.toggle('active', i === rangeMap[statsState.range]));
+      document.getElementById('rank-btn-cat').classList.toggle('active', statsState.rankMode === 'category');
+      document.getElementById('rank-btn-pay').classList.toggle('active', statsState.rankMode === 'payment');
+    }
+
     function applyViewContextFromSnapshot(snap) {
       const vc = snap && snap.viewContext;
       if (!vc) {
@@ -2527,23 +3174,47 @@
           document.getElementById('wallet-search-view').style.display = 'none';
           document.getElementById('wallet-history-main').style.display = 'block';
         }
+        closeStatsDetailModal();
         renderAll();
         return;
       }
 
       if (vc.mode === 'search') {
+        closeStatsDetailModal();
         walletSearchState.active = true;
         walletSearchState.query = vc.query || '';
         walletSearchState.tab = vc.searchTab || '支出';
         document.getElementById('wallet-search-input').value = walletSearchState.query;
         toggleSearchClearBtn('wallet');
-        renderAll();
+        if (currentTab !== 'history') {
+          switchTab('history', document.querySelectorAll('.nav-tab')[2], true);
+        } else {
+          renderAll();
+        }
         requestAnimationFrame(() => {
           window.scrollTo({ top: Number(vc.scrollTop) || 0, behavior: 'auto' });
         });
-      } else if (vc.mode === 'history') {
+      } else if (vc.mode === 'stats_detail') {
         walletSearchState.active = false;
-        renderAll();
+        statsState.ledger = vc.ledger || 'wallet';
+        statsState.range = vc.range || 'cycle';
+        statsState.rankMode = vc.rankMode || 'category';
+        syncStatsFilterButtonsUI();
+        switchTab('stats', document.querySelectorAll('.nav-tab')[3], true);
+        openStatsDetailModal(vc.rankName || '', vc.sortField || 'date', vc.sortDir || 'desc');
+        requestAnimationFrame(() => {
+          const sc = document.getElementById('stats-detail-scroll');
+          if (sc) sc.scrollTop = Number(vc.scrollTop) || 0;
+        });
+      } else if (vc.mode === 'history') {
+        closeStatsDetailModal();
+        walletSearchState.active = false;
+        resetSearchBarInput('wallet');
+        if (currentTab !== 'history') {
+          switchTab('history', document.querySelectorAll('.nav-tab')[2], true);
+        } else {
+          renderAll();
+        }
         if (vc.highlightLogId) {
           requestAnimationFrame(() => {
             scrollToAndHighlightLog('log-list', vc.highlightLogId, null);
@@ -2604,6 +3275,7 @@
             appState.presets = Array.isArray(parsed.presets) ? parsed.presets : [];
             appState.logs = Array.isArray(parsed.logs) ? parsed.logs : [];
             appState.piggyLogs = Array.isArray(parsed.piggyLogs) ? parsed.piggyLogs : [];
+            appState.cycleSummaries = Array.isArray(parsed.cycleSummaries) ? parsed.cycleSummaries : [];
           }
         }
         recalculateState();
@@ -2622,7 +3294,7 @@
       recalculateState();
       const backupPayload = {
         app: 'PocketLedger_GitHub',
-        version: 4,
+        version: 5,
         exportedAt: getNowFormattedString(),
         data: {
           categories: appState.categories,
@@ -2632,7 +3304,8 @@
           currentTotal: appState.currentTotal,
           logs: appState.logs,
           piggyRemaining: appState.piggyRemaining,
-          piggyLogs: appState.piggyLogs
+          piggyLogs: appState.piggyLogs,
+          cycleSummaries: appState.cycleSummaries
         },
         versionHistory: {
           stack: historyStack,
@@ -2689,6 +3362,7 @@
               appState.presets = Array.isArray(source.presets) ? source.presets : [];
               appState.logs = source.logs;
               appState.piggyLogs = Array.isArray(source.piggyLogs) ? source.piggyLogs : [];
+              appState.cycleSummaries = Array.isArray(source.cycleSummaries) ? source.cycleSummaries : [];
 
               selectedPresetIndex = null;
 
@@ -2716,10 +3390,94 @@
     }
 
     // ========= 頁面初始化與分頁切換 =========
+    function positionSegSlider(containerEl) {
+      if (!containerEl) return;
+      const slider = containerEl.querySelector('.seg-slider-bg');
+      const activeBtn = containerEl.querySelector('.active');
+      if (!slider || !activeBtn) return;
+      if (activeBtn.offsetWidth <= 0) return;
+      slider.style.width = activeBtn.offsetWidth + 'px';
+      slider.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    }
+
+    function syncAllStatsSliders() {
+      requestAnimationFrame(() => {
+        positionSegSlider(document.getElementById('stats-ledger-switch'));
+        positionSegSlider(document.getElementById('stats-range-switch'));
+        positionSegSlider(document.getElementById('stats-rank-switch'));
+        positionSegSlider(document.getElementById('stats-detail-sort-switch'));
+      });
+    }
+
+    function attachEdgeSwipeBack(modalEl, onCloseFn) {
+      if (!modalEl) return;
+      let startX = 0, startY = 0, dx = 0, isEdge = false, isHoriz = null;
+
+      modalEl.addEventListener('touchstart', function(e) {
+        if (!e.touches || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        if (t.clientX <= 42) {
+          isEdge = true;
+          startX = t.clientX;
+          startY = t.clientY;
+          dx = 0;
+          isHoriz = null;
+          modalEl.style.transition = 'none';
+        } else {
+          isEdge = false;
+        }
+      }, { passive: true });
+
+      modalEl.addEventListener('touchmove', function(e) {
+        if (!isEdge || !e.touches || e.touches.length !== 1) return;
+        const curX = e.touches[0].clientX - startX;
+        const curY = e.touches[0].clientY - startY;
+        if (isHoriz === null) {
+          if (Math.abs(curX) > 6 || Math.abs(curY) > 6) {
+            isHoriz = (curX > 0 && Math.abs(curX) > Math.abs(curY));
+            if (!isHoriz) {
+              isEdge = false;
+              return;
+            }
+          }
+        }
+        if (!isHoriz) return;
+        if (e.cancelable) e.preventDefault();
+        dx = Math.max(0, curX);
+        modalEl.style.transform = `translateX(${dx}px)`;
+      }, { passive: false });
+
+      modalEl.addEventListener('touchend', function() {
+        if (!isEdge) return;
+        isEdge = false;
+        modalEl.style.transition = 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)';
+        const threshold = Math.min(110, (window.innerWidth || 360) * 0.28);
+        if (dx > threshold) {
+          modalEl.style.transform = 'translateX(100%)';
+          setTimeout(() => {
+            modalEl.style.transition = 'none';
+            modalEl.style.transform = '';
+            onCloseFn();
+          }, 260);
+        } else {
+          modalEl.style.transform = 'translateX(0px)';
+          setTimeout(() => {
+            modalEl.style.transition = 'none';
+            modalEl.style.transform = '';
+          }, 280);
+        }
+      });
+    }
+
+    window.addEventListener('resize', syncAllStatsSliders);
+
     window.onload = function() {
       loadStateFromLocal();
       setRecordDateToToday();
       renderAll();
+      attachEdgeSwipeBack(document.getElementById('stats-detail-modal'), closeStatsDetailModal);
+      attachEdgeSwipeBack(document.getElementById('piggy-modal'), closePiggyBankModal);
+      syncAllStatsSliders();
     };
 
     function updateTopRightActionButtons() {
@@ -2735,7 +3493,7 @@
       updateUndoRedoButtonsUI();
     }
 
-    function switchTab(tabName, btnEl) {
+    function switchTab(tabName, btnEl, skipScrollTop = false) {
       const prevTab = currentTab;
       currentTab = tabName;
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2751,6 +3509,10 @@
       if (tabName !== 'record') {
         closeCalcKeyboard();
       }
+      if (prevTab === 'history' && tabName !== 'history') {
+        walletSearchState.active = false;
+        resetSearchBarInput('wallet');
+      }
 
       if (tabName === 'record' && prevTab !== 'record') {
         resetRecordFormOnEnter();
@@ -2758,10 +3520,14 @@
         renderOverview();
       } else if (tabName === 'history') {
         renderHistory();
+      } else if (tabName === 'stats') {
+        renderStatsPage();
       }
 
       updateTopRightActionButtons();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!skipScrollTop) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     function setMode(mode) {
@@ -2820,6 +3586,10 @@
       renderPresetsSelectList();
       renderHistory();
       renderPiggyHistory();
+      renderStatsPage();
+      if (statsDetailState.open) {
+        renderStatsDetailModalList();
+      }
       updateTopRightActionButtons();
       if (document.getElementById('daily-spend-sheet').classList.contains('active')) {
         renderDailySpendSheetContent();
@@ -2909,6 +3679,8 @@
     }
 
     function closePiggyBankModal() {
+      piggySearchState.active = false;
+      resetSearchBarInput('piggy');
       document.getElementById('piggy-modal').classList.remove('active');
     }
 
@@ -3161,7 +3933,7 @@
       }
     }
 
-    // ========= 新增、清存、左滑刪除任一紀錄 =========
+    // ========= 新增、清存（含週期歷史快照歸檔）、左滑刪除 =========
     function submitRecord() {
       closeCalcKeyboard();
       const amount = Math.abs(Number(computeExpressionValue(calcInput)) || 0);
@@ -3221,16 +3993,52 @@
       switchTab('overview', document.querySelectorAll('.nav-tab')[0]);
     }
 
+    function buildCurrentCycleSummary(nowStr) {
+      const currentCycleLogs = [];
+      for (let i = 0; i < (appState.logs || []).length; i++) {
+        const item = appState.logs[i];
+        if (item.type === '清空') break;
+        currentCycleLogs.push(item);
+      }
+
+      let totalExpense = 0;
+      let startDate = nowStr.split(' ')[0];
+      const endDate = nowStr.split(' ')[0];
+
+      if (currentCycleLogs.length > 0) {
+        const dates = currentCycleLogs
+          .map(item => String(item.date || '').split(' ')[0])
+          .filter(Boolean)
+          .sort();
+        if (dates.length > 0) startDate = dates[0];
+        currentCycleLogs.forEach(item => {
+          if (item.type === '支出') {
+            totalExpense += Number(item.amount) || 0;
+          }
+        });
+      }
+
+      return {
+        id: 'cycle_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        startDate: startDate,
+        endDate: endDate,
+        totalBudget: Number(appState.currentTotal || 0),
+        totalExpense: totalExpense,
+        remaining: Number(appState.currentRemaining || 0),
+        settledAt: nowStr
+      };
+    }
+
     function handleClear() {
       recalculateState();
       const rem = Number(appState.currentRemaining || 0);
       let confirmMsg = '';
       if (rem > 0) {
-        confirmMsg = `確定要執行清存嗎？\n將把本輪剩餘「${rem.toLocaleString()} 元」存入存錢筒（註記：剩錢存入），並將錢包歸零重新計算。`;
+        confirmMsg = `確定要執行清存嗎？\n將把本輪剩餘「${rem.toLocaleString()} 元」存入存錢筒（註記：剩錢存入），同時歸檔本輪週期摘要並將錢包歸零重新計算。`;
       } else if (rem < 0) {
-        confirmMsg = `確定要執行清存嗎？\n本輪透支「${Math.abs(rem).toLocaleString()} 元」，將從存錢筒扣款（註記：透支存錢），並將錢包歸零重新計算。`;
+        confirmMsg = `確定要執行清存嗎？\n本輪透支「${Math.abs(rem).toLocaleString()} 元」，將從存錢筒扣款（註記：透支存錢），同時歸檔本輪週期摘要並將錢包歸零重新計算。`;
       } else {
-        confirmMsg = '確定要執行清存嗎？\n目前可用餘額為 0 元，將直接把錢包歸零重新計算。';
+        confirmMsg = '確定要執行清存嗎？\n目前可用餘額為 0 元，將歸檔本輪週期摘要並把錢包歸零重新計算。';
       }
 
       showAppConfirm(
@@ -3238,6 +4046,8 @@
         () => {
           closeCalcKeyboard();
           const nowStr = getNowFormattedString();
+
+          const cycleId = 'cycle_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
 
           if (rem > 0) {
             appState.piggyLogs.unshift({
@@ -3269,6 +4079,7 @@
 
           appState.logs.unshift({
             id: 'log_' + Date.now() + '_clear',
+            cycleId: cycleId,
             seq: getNextSeqNumber(appState.logs),
             date: nowStr,
             type: '清空',
@@ -3344,30 +4155,25 @@
       const dayNum = dateSegments.length >= 3 ? Number(dateSegments[2]) : NaN;
       const amtStr = String(Math.abs(Number(item.amount) || 0));
 
-      // 1. 「數字 + 元」：只比對金額
       const yuanMatch = q.match(/^(\d+)元$/);
       if (yuanMatch) {
         return amtStr.includes(yuanMatch[1]);
       }
 
-      // 2. 「數字 + 月」：只比對月份
       const monthMatch = q.match(/^(\d{1,2})月$/);
       if (monthMatch) {
         return !isNaN(monthNum) && monthNum === Number(monthMatch[1]);
       }
 
-      // 3. 「數字 + 日/號」：只比對日期的日
       const dayMatch = q.match(/^(\d{1,2})[日號]$/);
       if (dayMatch) {
         return !isNaN(dayNum) && dayNum === Number(dayMatch[1]);
       }
 
-      // 4. 純數字序列：比對金額字串 與 日期字串（yyyy/mm/dd）
       if (/^\d+$/.test(q)) {
         return amtStr.includes(q) || datePart.includes(q);
       }
 
-      // 5. 一般文字：比對類別、說明用途、支付方式
       const qLower = q.toLowerCase();
       const fields = [
         item.categoryOrNote || '',
@@ -3397,7 +4203,6 @@
       toggleSearchClearBtn(scope);
     }
 
-    // 錢包搜尋操作
     function executeWalletSearch() {
       const raw = document.getElementById('wallet-search-input').value.trim();
       if (!raw) {
@@ -3411,8 +4216,15 @@
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
+    function resetSearchBarInput(scope) {
+      const inp = document.getElementById(scope + '-search-input');
+      if (inp) inp.value = '';
+      toggleSearchClearBtn(scope);
+    }
+
     function exitWalletSearch() {
       walletSearchState.active = false;
+      resetSearchBarInput('wallet');
       renderHistory();
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
@@ -3422,7 +4234,6 @@
       renderWalletSearchResults();
     }
 
-    // 存錢筒搜尋操作
     function executePiggySearch() {
       const raw = document.getElementById('piggy-search-input').value.trim();
       if (!raw) {
@@ -3439,6 +4250,7 @@
 
     function exitPiggySearch() {
       piggySearchState.active = false;
+      resetSearchBarInput('piggy');
       renderPiggyHistory();
       const scrollBox = document.getElementById('piggy-scroll-body');
       if (scrollBox) scrollBox.scrollTop = 0;
@@ -3497,6 +4309,7 @@
       pushHistoryStep({ mode: 'history', highlightLogId: logId });
 
       walletSearchState.active = false;
+      resetSearchBarInput('wallet');
       renderHistory();
       requestAnimationFrame(() => {
         scrollToAndHighlightLog('log-list', logId, null);
@@ -3505,6 +4318,7 @@
 
     function jumpFromPiggySearchResult(logId) {
       piggySearchState.active = false;
+      resetSearchBarInput('piggy');
       renderPiggyHistory();
       const scrollBox = document.getElementById('piggy-scroll-body');
       requestAnimationFrame(() => {
@@ -3875,6 +4689,728 @@
         deletePiggyLogById,
         '存錢筒尚無任何紀錄'
       );
+    }
+
+    // ========= 4. 統計頁面邏輯與原生 SVG 圖表繪製 =========
+    function setStatsFilter(type, value, btnEl) {
+      statsState[type] = value;
+      const parentId = (type === 'ledger') ? 'stats-ledger-switch' : 'stats-range-switch';
+      const parent = document.getElementById(parentId);
+      if (parent) {
+        parent.querySelectorAll('.stats-seg-btn').forEach(b => b.classList.remove('active'));
+      }
+      if (btnEl) btnEl.classList.add('active');
+      renderStatsPage();
+    }
+
+    function setStatsRankMode(mode) {
+      statsState.rankMode = mode;
+      document.getElementById('rank-btn-cat').classList.toggle('active', mode === 'category');
+      document.getElementById('rank-btn-pay').classList.toggle('active', mode === 'payment');
+      renderStatsRankCard(getFilteredStatsLogs());
+      positionSegSlider(document.getElementById('stats-rank-switch'));
+    }
+
+    function getCurrentCycleWalletLogs() {
+      const res = [];
+      for (let i = 0; i < (appState.logs || []).length; i++) {
+        const item = appState.logs[i];
+        if (item.type === '清空') break;
+        res.push(item);
+      }
+      return res;
+    }
+
+    function getFilteredStatsLogs() {
+      let combined = [];
+      if (statsState.ledger === 'wallet') {
+        const base = (statsState.range === 'cycle') ? getCurrentCycleWalletLogs() : (appState.logs || []);
+        combined = base.map(item => ({ ...item, _ledger: '錢包' }));
+      } else if (statsState.ledger === 'piggy') {
+        combined = (appState.piggyLogs || []).map(item => ({ ...item, _ledger: '存錢筒' }));
+      } else {
+        const wLogs = ((statsState.range === 'cycle') ? getCurrentCycleWalletLogs() : (appState.logs || []))
+          .map(item => ({ ...item, _ledger: '錢包' }));
+        const pLogs = (appState.piggyLogs || []).map(item => ({ ...item, _ledger: '存錢筒' }));
+        combined = wLogs.concat(pLogs);
+      }
+
+      // 過濾掉清空分隔線（統計收支時僅看支出/收入）
+      combined = combined.filter(item => item.type === '支出' || item.type === '收入');
+
+      const todayDt = parseDateKeyToObj(getTodayDateKey());
+      if (statsState.range === '30d' && todayDt) {
+        const cutoff = new Date(todayDt);
+        cutoff.setDate(cutoff.getDate() - 29);
+        const cutoffKey = formatObjToDateKey(cutoff);
+        combined = combined.filter(item => String(item.date || '').split(' ')[0] >= cutoffKey);
+      } else if (statsState.range === '6m' && todayDt) {
+        const cutoff = new Date(todayDt);
+        cutoff.setMonth(cutoff.getMonth() - 5);
+        cutoff.setDate(1);
+        const cutoffKey = formatObjToDateKey(cutoff);
+        combined = combined.filter(item => String(item.date || '').split(' ')[0] >= cutoffKey);
+      } else if (statsState.range === 'cycle' && statsState.ledger !== 'wallet') {
+        // 存錢筒或合併模式下「本輪」：以錢包本輪起始日（或近30天若錢包本輪無紀錄）為區間
+        const wCycle = getCurrentCycleWalletLogs();
+        if (wCycle.length > 0) {
+          const dates = wCycle.map(x => String(x.date || '').split(' ')[0]).filter(Boolean).sort();
+          const minKey = dates[0];
+          if (minKey) {
+            combined = combined.filter(item => String(item.date || '').split(' ')[0] >= minKey);
+          }
+        }
+      }
+
+      return combined;
+    }
+
+    function renderStatsPage() {
+      const logs = getFilteredStatsLogs();
+      renderStatsKPIs(logs);
+      renderStatsRankCard(logs);
+      renderStatsTrendChart(logs);
+      renderStatsNetWorthChart();
+      renderStatsWeekdayChart(logs);
+      renderStatsCycleArchive();
+      syncAllStatsSliders();
+    }
+
+    function renderStatsKPIs(logs) {
+      let totalExp = 0;
+      let totalInc = 0;
+      const daySpendMap = {};
+      const allDayKeys = [];
+
+      logs.forEach(item => {
+        const dayKey = String(item.date || '').split(' ')[0];
+        if (dayKey) allDayKeys.push(dayKey);
+        const amt = Number(item.amount) || 0;
+        if (item.type === '支出') {
+          totalExp += amt;
+          if (dayKey) daySpendMap[dayKey] = (daySpendMap[dayKey] || 0) + amt;
+        } else if (item.type === '收入') {
+          totalInc += amt;
+        }
+      });
+
+      let daySpan = 1;
+      if (statsState.range === '30d') {
+        daySpan = 30;
+      } else if (allDayKeys.length > 0) {
+        allDayKeys.sort();
+        const d1 = parseDateKeyToObj(allDayKeys[0]);
+        const d2 = parseDateKeyToObj(getTodayDateKey());
+        if (d1 && d2) {
+          daySpan = Math.max(1, Math.round((d2 - d1) / 86400000) + 1);
+        }
+      }
+
+      const avgDaily = Math.round(totalExp / daySpan);
+      document.getElementById('kpi-avg-spend').textContent = `${avgDaily.toLocaleString()} 元`;
+      document.getElementById('kpi-avg-sub').textContent = `${daySpan} 天區間`;
+
+      let peakAmt = 0;
+      let peakDate = '尚無支出';
+      Object.entries(daySpendMap).forEach(([dk, val]) => {
+        if (val > peakAmt) {
+          peakAmt = val;
+          peakDate = dk;
+        }
+      });
+      document.getElementById('kpi-peak-spend').textContent = `${peakAmt.toLocaleString()} 元`;
+      document.getElementById('kpi-peak-date').textContent = peakDate;
+
+      const net = totalInc - totalExp;
+      let rateText = '0%';
+      if (totalInc > 0) {
+        rateText = `${Math.round((net / totalInc) * 100)}%`;
+      } else if (totalExp > 0) {
+        rateText = '-100%';
+      }
+      const rateEl = document.getElementById('kpi-save-rate');
+      rateEl.textContent = rateText;
+      rateEl.className = 'stats-kpi-val ' + (net >= 0 ? 'income' : 'expense');
+      document.getElementById('kpi-net-sub').textContent = `淨額 ${net >= 0 ? '+' : ''}${net.toLocaleString()} 元`;
+    }
+
+    // 圖表 1：每日 / 每月收支趨勢長條圖（含均線）
+    let currentTrendBuckets = [];
+    function renderStatsTrendChart(logs) {
+      const wrap = document.getElementById('stats-trend-svg-wrap');
+      const detail = document.getElementById('stats-trend-detail');
+      detail.classList.remove('active');
+      detail.innerHTML = '';
+
+      if (!logs || logs.length === 0) {
+        wrap.innerHTML = '<div class="empty-hint" style="padding:18px 0;">此篩選條件下尚無收支資料</div>';
+        return;
+      }
+
+      const useMonthly = (statsState.range === '6m') || (statsState.range === 'all' && (() => {
+        const ds = logs.map(l => String(l.date || '').split(' ')[0]).filter(Boolean).sort();
+        if (ds.length < 2) return false;
+        const d1 = parseDateKeyToObj(ds[0]);
+        const d2 = parseDateKeyToObj(ds[ds.length - 1]);
+        return d1 && d2 && ((d2 - d1) / 86400000 > 45);
+      })());
+
+      document.getElementById('trend-card-title').textContent = useMonthly
+        ? '每月收支趨勢'
+        : '每日收支趨勢';
+
+      const bucketMap = {};
+      logs.forEach(item => {
+        const dayKey = String(item.date || '').split(' ')[0];
+        if (!dayKey) return;
+        const key = useMonthly ? dayKey.slice(0, 7) : dayKey;
+        if (!bucketMap[key]) bucketMap[key] = { key, inc: 0, exp: 0 };
+        const amt = Number(item.amount) || 0;
+        if (item.type === '收入') bucketMap[key].inc += amt;
+        else if (item.type === '支出') bucketMap[key].exp += amt;
+      });
+
+      let buckets = Object.values(bucketMap).sort((a, b) => a.key.localeCompare(b.key));
+      if (buckets.length > 14) {
+        buckets = buckets.slice(-14);
+      }
+      currentTrendBuckets = buckets;
+
+      const maxVal = Math.max(100, ...buckets.map(b => Math.max(b.inc, b.exp)));
+      const W = 440, H = 200;
+      const padL = 42, padR = 14, padT = 18, padB = 28;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+      const step = plotW / buckets.length;
+      const barW = Math.max(4, Math.min(14, step * 0.34));
+
+      // 移動平均線（3期均線）
+      const avgPoints = buckets.map((b, i) => {
+        const start = Math.max(0, i - 2);
+        const slice = buckets.slice(start, i + 1);
+        const avg = slice.reduce((s, x) => s + x.exp, 0) / slice.length;
+        const cx = padL + step * i + step / 2;
+        const cy = padT + plotH - (avg / maxVal) * plotH;
+        return `${cx.toFixed(1)},${cy.toFixed(1)}`;
+      }).join(' ');
+
+      let gridHtml = '';
+      [0, 0.5, 1].forEach(r => {
+        const y = padT + plotH - r * plotH;
+        const valLabel = Math.round(maxVal * r);
+        const shortLabel = valLabel >= 1000 ? (valLabel / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(valLabel);
+        gridHtml += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="#E5E3DC" stroke-width="1"/>`;
+        gridHtml += `<text x="${padL - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#7A7A75" font-family="monospace">${shortLabel}</text>`;
+      });
+
+      let barsHtml = '';
+      buckets.forEach((b, i) => {
+        const cx = padL + step * i + step / 2;
+        const incH = (b.inc / maxVal) * plotH;
+        const expH = (b.exp / maxVal) * plotH;
+        const incY = padT + plotH - incH;
+        const expY = padT + plotH - expH;
+        const label = useMonthly ? b.key.slice(5) + '月' : b.key.slice(5);
+        const showLabel = buckets.length <= 7 || i === 0 || i === buckets.length - 1 || i % Math.ceil(buckets.length / 5) === 0;
+
+        barsHtml += `
+          <g style="cursor:pointer;" onclick="selectTrendBucket(${i})">
+            <rect x="${(padL + step * i).toFixed(1)}" y="${padT}" width="${step.toFixed(1)}" height="${plotH}" fill="transparent"/>
+            <rect x="${(cx - barW - 1).toFixed(1)}" y="${incY.toFixed(1)}" width="${barW.toFixed(1)}" height="${incH.toFixed(1)}" rx="2" fill="#385E4C"/>
+            <rect x="${(cx + 1).toFixed(1)}" y="${expY.toFixed(1)}" width="${barW.toFixed(1)}" height="${expH.toFixed(1)}" rx="2" fill="#8C4A32"/>
+            ${showLabel ? `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#7A7A75" font-family="monospace">${label}</text>` : ''}
+          </g>
+        `;
+      });
+
+      wrap.innerHTML = `
+        <svg class="stats-svg" viewBox="0 0 ${W} ${H}">
+          ${gridHtml}
+          ${barsHtml}
+          <polyline fill="none" stroke="#2C2C2A" stroke-width="1.8" stroke-dasharray="3 2" points="${avgPoints}"/>
+        </svg>
+      `;
+    }
+
+    function selectTrendBucket(idx) {
+      const b = currentTrendBuckets[idx];
+      if (!b) return;
+      const box = document.getElementById('stats-trend-detail');
+      const net = b.inc - b.exp;
+      box.innerHTML = `
+        <div class="stats-detail-head">
+          <span>${b.key}</span>
+          <span>淨額 ${net >= 0 ? '+' : ''}${net.toLocaleString()} 元</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; color:var(--muted);">
+          <span>收入：<b style="color:var(--income);">+${b.inc.toLocaleString()} 元</b></span>
+          <span>支出：<b style="color:var(--expense);">-${b.exp.toLocaleString()} 元</b></span>
+        </div>
+      `;
+      box.classList.add('active');
+    }
+
+    // 圖表 3：雙帳本淨資產成長折線／面積圖
+    let currentNetWorthPoints = [];
+    function renderStatsNetWorthChart() {
+      const wrap = document.getElementById('stats-networth-svg-wrap');
+      const detail = document.getElementById('stats-networth-detail');
+      detail.classList.remove('active');
+      detail.innerHTML = '';
+
+      const allDatesSet = new Set();
+      const wByDay = {};
+      const pByDay = {};
+
+      // 按時間正序讀取錢包與存錢筒每日收盤餘額
+      const wChron = [...(appState.logs || [])].reverse();
+      wChron.forEach(item => {
+        const dk = String(item.date || '').split(' ')[0];
+        if (!dk) return;
+        allDatesSet.add(dk);
+        wByDay[dk] = Number(item.remaining) || 0;
+      });
+
+      const pChron = [...(appState.piggyLogs || [])].reverse();
+      pChron.forEach(item => {
+        const dk = String(item.date || '').split(' ')[0];
+        if (!dk) return;
+        allDatesSet.add(dk);
+        pByDay[dk] = Number(item.remaining) || 0;
+      });
+
+      let sortedDates = Array.from(allDatesSet).sort();
+      if (sortedDates.length === 0) {
+        wrap.innerHTML = '<div class="empty-hint" style="padding:18px 0;">尚無足夠的雙帳本歷史紀錄</div>';
+        return;
+      }
+
+      // 依序填充每日累計值
+      let curW = 0, curP = 0;
+      let series = sortedDates.map(dk => {
+        if (typeof wByDay[dk] === 'number') curW = wByDay[dk];
+        if (typeof pByDay[dk] === 'number') curP = pByDay[dk];
+        return { date: dk, wallet: curW, piggy: curP, total: curW + curP };
+      });
+
+      // 套用時間尺度篩選
+      const todayDt = parseDateKeyToObj(getTodayDateKey());
+      if (statsState.range === '30d' && todayDt) {
+        const cutoff = new Date(todayDt);
+        cutoff.setDate(cutoff.getDate() - 29);
+        const cutoffKey = formatObjToDateKey(cutoff);
+        const filtered = series.filter(s => s.date >= cutoffKey);
+        if (filtered.length > 0) series = filtered;
+      } else if (statsState.range === '6m' && todayDt) {
+        const cutoff = new Date(todayDt);
+        cutoff.setMonth(cutoff.getMonth() - 5);
+        cutoff.setDate(1);
+        const cutoffKey = formatObjToDateKey(cutoff);
+        const filtered = series.filter(s => s.date >= cutoffKey);
+        if (filtered.length > 0) series = filtered;
+      } else if (statsState.range === 'cycle') {
+        const wCycle = getCurrentCycleWalletLogs();
+        if (wCycle.length > 0) {
+          const minKey = wCycle.map(x => String(x.date || '').split(' ')[0]).filter(Boolean).sort()[0];
+          series = series.filter(s => s.date >= minKey);
+        } else {
+          const lastClear = (appState.logs || []).find(x => x.type === '清空');
+          if (lastClear) {
+            const clearDay = String(lastClear.date || '').split(' ')[0];
+            series = series.filter(s => s.date >= clearDay);
+          }
+        }
+        if (series.length === 0) {
+          wrap.innerHTML = '<div class="empty-hint" style="padding:18px 0;">本輪尚無資產變動紀錄</div>';
+          return;
+        }
+      }
+
+      if (series.length > 24) {
+        const stepSample = Math.ceil(series.length / 24);
+        series = series.filter((_, idx) => idx % stepSample === 0 || idx === series.length - 1);
+      }
+      currentNetWorthPoints = series;
+
+      const allVals = series.flatMap(s => [s.wallet, s.piggy, 0]);
+      const minV = Math.min(...allVals);
+      const maxV = Math.max(100, ...allVals);
+      const spanV = Math.max(1, maxV - minV);
+
+      const W = 440, H = 190;
+      const padL = 46, padR = 14, padT = 16, padB = 26;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+
+      const getX = (i) => series.length === 1 ? padL + plotW / 2 : padL + (plotW * i) / (series.length - 1);
+      const getY = (v) => padT + plotH - ((v - minV) / spanV) * plotH;
+
+      const piggyPts = series.map((s, i) => `${getX(i).toFixed(1)},${getY(s.piggy).toFixed(1)}`).join(' ');
+      const walletPts = series.map((s, i) => `${getX(i).toFixed(1)},${getY(s.wallet).toFixed(1)}`).join(' ');
+      const zeroY = getY(0);
+      const piggyArea = series.length > 1
+        ? `${getX(0).toFixed(1)},${zeroY.toFixed(1)} ${piggyPts} ${getX(series.length - 1).toFixed(1)},${zeroY.toFixed(1)}`
+        : '';
+
+      let gridHtml = '';
+      [minV, minV + spanV / 2, maxV].forEach(val => {
+        const y = getY(val);
+        const r = Math.round(val);
+        const lbl = Math.abs(r) >= 1000 ? (r / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(r);
+        gridHtml += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="#E5E3DC" stroke-width="1"/>`;
+        gridHtml += `<text x="${padL - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#7A7A75" font-family="monospace">${lbl}</text>`;
+      });
+
+      let dotsHtml = '';
+      series.forEach((s, i) => {
+        const cx = getX(i);
+        const showLbl = i === 0 || i === series.length - 1 || (series.length >= 6 && i === Math.floor(series.length / 2));
+        dotsHtml += `
+          <g style="cursor:pointer;" onclick="selectNetWorthPoint(${i})">
+            <circle cx="${cx.toFixed(1)}" cy="${getY(s.piggy).toFixed(1)}" r="3.2" fill="#385E4C"/>
+            <circle cx="${cx.toFixed(1)}" cy="${getY(s.wallet).toFixed(1)}" r="2.8" fill="#8C4A32"/>
+            ${showLbl ? `<text x="${cx.toFixed(1)}" y="${H - 7}" text-anchor="middle" font-size="10" fill="#7A7A75" font-family="monospace">${s.date.slice(5)}</text>` : ''}
+          </g>
+        `;
+      });
+
+      wrap.innerHTML = `
+        <svg class="stats-svg" viewBox="0 0 ${W} ${H}">
+          ${gridHtml}
+          ${piggyArea ? `<polygon points="${piggyArea}" fill="rgba(56, 94, 76, 0.14)"/>` : ''}
+          <polyline fill="none" stroke="#385E4C" stroke-width="2" points="${piggyPts}"/>
+          <polyline fill="none" stroke="#8C4A32" stroke-width="1.6" stroke-dasharray="4 2" points="${walletPts}"/>
+          ${dotsHtml}
+        </svg>
+      `;
+    }
+
+    function selectNetWorthPoint(idx) {
+      const p = currentNetWorthPoints[idx];
+      if (!p) return;
+      const box = document.getElementById('stats-networth-detail');
+      box.innerHTML = `
+        <div class="stats-detail-head">
+          <span>${p.date}</span>
+          <span>總淨資產 ${p.total.toLocaleString()} 元</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; color:var(--muted);">
+          <span>存錢筒：<b style="color:var(--income);">${p.piggy.toLocaleString()} 元</b></span>
+          <span>錢包：<b style="color:var(--expense);">${p.wallet.toLocaleString()} 元</b></span>
+        </div>
+      `;
+      box.classList.add('active');
+    }
+
+    // 圖表 4：週一至週日消費習慣分佈長條圖
+    let currentWeekdayBuckets = [];
+    function renderStatsWeekdayChart(logs) {
+      const wrap = document.getElementById('stats-weekday-svg-wrap');
+      const detail = document.getElementById('stats-weekday-detail');
+      detail.classList.remove('active');
+      detail.innerHTML = '';
+
+      // 順序：一(1) 二(2) 三(3) 四(4) 五(5) 六(6) 日(0)
+      const order = [1, 2, 3, 4, 5, 6, 0];
+      const map = {};
+      order.forEach(d => { map[d] = { dayIdx: d, name: '週' + WEEKDAY_NAMES[d], sum: 0, count: 0 }; });
+
+      logs.forEach(item => {
+        if (item.type !== '支出') return;
+        const dt = parseDateKeyToObj(String(item.date || '').split(' ')[0]);
+        if (!dt) return;
+        const d = dt.getDay();
+        map[d].sum += Number(item.amount) || 0;
+        map[d].count += 1;
+      });
+
+      const buckets = order.map(d => map[d]);
+      currentWeekdayBuckets = buckets;
+      const maxVal = Math.max(100, ...buckets.map(b => b.sum));
+
+      let peak = buckets[0];
+      buckets.forEach(b => { if (b.sum > peak.sum) peak = b; });
+      document.getElementById('weekday-peak-hint').textContent = peak.sum > 0 ? `最高 ${peak.name}` : '尚無支出';
+
+      const W = 440, H = 175;
+      const padL = 16, padR = 16, padT = 22, padB = 26;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+      const step = plotW / 7;
+      const barW = Math.min(28, step * 0.52);
+
+      let barsHtml = '';
+      buckets.forEach((b, i) => {
+        const cx = padL + step * i + step / 2;
+        const bh = (b.sum / maxVal) * plotH;
+        const by = padT + plotH - bh;
+        const isPeak = (b.sum > 0 && b.sum === peak.sum);
+        const fill = isPeak ? '#8C4A32' : 'rgba(140, 74, 50, 0.62)';
+        const amtLbl = b.sum >= 1000 ? (b.sum / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : (b.sum > 0 ? String(b.sum) : '');
+
+        barsHtml += `
+          <g style="cursor:pointer;" onclick="selectWeekdayBar(${i})">
+            <rect x="${(padL + step * i).toFixed(1)}" y="${padT}" width="${step.toFixed(1)}" height="${plotH}" fill="transparent"/>
+            <rect x="${(cx - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="3" fill="${fill}"/>
+            ${amtLbl ? `<text x="${cx.toFixed(1)}" y="${(by - 5).toFixed(1)}" text-anchor="middle" font-size="10" fill="#2C2C2A" font-family="monospace">${amtLbl}</text>` : ''}
+            <text x="${cx.toFixed(1)}" y="${H - 7}" text-anchor="middle" font-size="11" font-weight="${isPeak ? '700' : '500'}" fill="${isPeak ? '#8C4A32' : '#7A7A75'}">${b.name.replace('週', '')}</text>
+          </g>
+        `;
+      });
+
+      wrap.innerHTML = `
+        <svg class="stats-svg" viewBox="0 0 ${W} ${H}">
+          <line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#E5E3DC" stroke-width="1"/>
+          ${barsHtml}
+        </svg>
+      `;
+    }
+
+    function selectWeekdayBar(idx) {
+      const b = currentWeekdayBuckets[idx];
+      if (!b) return;
+      const box = document.getElementById('stats-weekday-detail');
+      const avg = b.count > 0 ? Math.round(b.sum / b.count) : 0;
+      box.innerHTML = `
+        <div class="stats-detail-head">
+          <span>${b.name}消費統計</span>
+          <span style="color:var(--expense);">${b.sum.toLocaleString()} 元</span>
+        </div>
+        <div style="color:var(--muted);">共 ${b.count} 筆支出・單筆平均 ${avg.toLocaleString()} 元</div>
+      `;
+      box.classList.add('active');
+    }
+
+    // 圖表 1：類別 / 支付方式排行橫向進度條（點擊開啟類紀錄頁明細彈窗）
+    let currentRankItems = [];
+    function getExpenseKeyForRank(item) {
+      if (statsState.rankMode === 'category') {
+        return String(item.categoryOrNote || '未分類').split('（')[0] || '未分類';
+      }
+      return String(item.payment || '未指定').trim() || '未指定';
+    }
+
+    function renderStatsRankCard(logs) {
+      const listEl = document.getElementById('stats-rank-list');
+      const map = {};
+      let total = 0;
+
+      logs.forEach(item => {
+        if (item.type !== '支出') return;
+        const amt = Number(item.amount) || 0;
+        const key = getExpenseKeyForRank(item);
+        if (!map[key]) map[key] = { name: key, sum: 0, count: 0 };
+        map[key].sum += amt;
+        map[key].count += 1;
+        total += amt;
+      });
+
+      const items = Object.values(map).sort((a, b) => b.sum - a.sum);
+      currentRankItems = items;
+
+      if (items.length === 0) {
+        listEl.innerHTML = '<div class="empty-hint" style="padding:14px 0;">此區間尚無支出項目</div>';
+        return;
+      }
+
+      listEl.innerHTML = items.map((it, idx) => {
+        const pct = total > 0 ? Math.round((it.sum / total) * 100) : 0;
+        const barW = total > 0 ? Math.max(3, (it.sum / items[0].sum) * 100) : 0;
+        return `
+          <div class="rank-row" onclick="selectRankItem(${idx})">
+            <div class="rank-top">
+              <span class="rank-name">${idx + 1}. ${it.name}</span>
+              <span class="rank-val"><b>${it.sum.toLocaleString()} 元</b> (${pct}%)</span>
+            </div>
+            <div class="rank-track">
+              <div class="rank-fill" style="width: ${barW.toFixed(1)}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectRankItem(idx) {
+      const it = currentRankItems[idx];
+      if (!it) return;
+      openStatsDetailModal(it.name, 'date', 'desc');
+    }
+
+    function updateStatsDetailSortUI() {
+      document.getElementById('stats-sort-date').classList.toggle('active', statsDetailState.sortField === 'date');
+      document.getElementById('stats-sort-amt').classList.toggle('active', statsDetailState.sortField === 'amount');
+      positionSegSlider(document.getElementById('stats-detail-sort-switch'));
+    }
+
+    function openStatsDetailModal(rankName, sortField = 'date', sortDir = 'desc') {
+      statsDetailState.open = true;
+      statsDetailState.rankName = rankName;
+      statsDetailState.sortField = sortField;
+      statsDetailState.sortDir = sortDir;
+      updateStatsDetailSortUI();
+      renderStatsDetailModalList();
+      document.getElementById('stats-detail-modal').classList.add('active');
+      syncAllStatsSliders();
+      const sc = document.getElementById('stats-detail-scroll');
+      if (sc) sc.scrollTop = 0;
+    }
+
+    function closeStatsDetailModal() {
+      statsDetailState.open = false;
+      const modal = document.getElementById('stats-detail-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function setStatsDetailSortField(field) {
+      statsDetailState.sortField = field;
+      statsDetailState.sortDir = 'desc';
+      updateStatsDetailSortUI();
+      renderStatsDetailModalList();
+      const sc = document.getElementById('stats-detail-scroll');
+      if (sc) sc.scrollTop = 0;
+    }
+
+    function toggleStatsDetailSortDir() {
+      statsDetailState.sortDir = (statsDetailState.sortDir === 'desc') ? 'asc' : 'desc';
+      updateStatsDetailSortUI();
+      renderStatsDetailModalList();
+      const sc = document.getElementById('stats-detail-scroll');
+      if (sc) sc.scrollTop = 0;
+    }
+
+    function renderStatsDetailModalList() {
+      const rankName = statsDetailState.rankName;
+      const logs = getFilteredStatsLogs().filter(item =>
+        item.type === '支出' && getExpenseKeyForRank(item) === rankName
+      );
+
+      const dir = (statsDetailState.sortDir === 'asc') ? 1 : -1;
+      if (statsDetailState.sortField === 'amount') {
+        logs.sort((a, b) => {
+          const diff = ((Number(a.amount) || 0) - (Number(b.amount) || 0)) * dir;
+          if (diff !== 0) return diff;
+          const dayA = String(a.date || '').split(' ')[0];
+          const dayB = String(b.date || '').split(' ')[0];
+          if (dayA !== dayB) return dayB.localeCompare(dayA);
+          return (Number(b.seq) || 0) - (Number(a.seq) || 0);
+        });
+      } else {
+        logs.sort((a, b) => {
+          const dayA = String(a.date || '').split(' ')[0];
+          const dayB = String(b.date || '').split(' ')[0];
+          if (dayA !== dayB) return dayA.localeCompare(dayB) * dir;
+          return ((Number(a.seq) || 0) - (Number(b.seq) || 0)) * dir;
+        });
+      }
+
+      const totalAmt = logs.reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
+      document.getElementById('stats-detail-title').textContent = rankName;
+      document.getElementById('stats-detail-total').textContent = `-${totalAmt.toLocaleString()} 元`;
+      document.getElementById('stats-detail-count').textContent = `${logs.length} 筆`;
+
+      const listEl = document.getElementById('stats-detail-list');
+      listEl.innerHTML = '';
+
+      if (logs.length === 0) {
+        listEl.innerHTML = '<div class="empty-hint">目前篩選條件下無對應明細</div>';
+        return;
+      }
+
+      logs.forEach(item => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'swipe-item-wrapper search-result-row';
+        const div = buildLogItemContent(item);
+
+        if (statsState.ledger === 'all' && item._ledger) {
+          const titleEl = div.querySelector('.log-title');
+          if (titleEl) {
+            const srcBadge = document.createElement('span');
+            srcBadge.className = 'badge-pay';
+            srcBadge.textContent = item._ledger;
+            titleEl.insertBefore(srcBadge, titleEl.firstChild);
+          }
+        }
+
+        div.onclick = () => jumpFromStatsDetail(item.id, item._ledger || '錢包');
+        wrapper.appendChild(div);
+        listEl.appendChild(wrapper);
+      });
+    }
+
+    function jumpFromStatsDetail(logId, ledgerLabel) {
+      if (ledgerLabel === '存錢筒') {
+        closeStatsDetailModal();
+        openPiggyBankModal();
+        const scrollBox = document.getElementById('piggy-scroll-body');
+        requestAnimationFrame(() => {
+          scrollToAndHighlightLog('piggy-log-list', logId, scrollBox);
+        });
+        return;
+      }
+
+      const sc = document.getElementById('stats-detail-scroll');
+      const savedScroll = sc ? sc.scrollTop : 0;
+      const detailCtx = {
+        mode: 'stats_detail',
+        ledger: statsState.ledger,
+        range: statsState.range,
+        rankMode: statsState.rankMode,
+        rankName: statsDetailState.rankName,
+        sortField: statsDetailState.sortField,
+        sortDir: statsDetailState.sortDir,
+        scrollTop: savedScroll
+      };
+
+      const curSnap = historyStack[historyPointer];
+      if (curSnap && curSnap.viewContext && curSnap.viewContext.mode === 'stats_detail') {
+        curSnap.viewContext = detailCtx;
+        if (historyPointer < historyStack.length - 1) {
+          historyStack = historyStack.slice(0, historyPointer + 1);
+        }
+      } else {
+        pushHistoryStep(detailCtx);
+      }
+
+      pushHistoryStep({ mode: 'history', highlightLogId: logId });
+
+      closeStatsDetailModal();
+      walletSearchState.active = false;
+      switchTab('history', document.querySelectorAll('.nav-tab')[2], true);
+      requestAnimationFrame(() => {
+        scrollToAndHighlightLog('log-list', logId, null);
+      });
+    }
+
+    // 歷輪清存歸檔卡片
+    function renderStatsCycleArchive() {
+      const listEl = document.getElementById('stats-cycle-archive-list');
+      const countEl = document.getElementById('cycle-archive-count');
+      const cycles = appState.cycleSummaries || [];
+      countEl.textContent = `${cycles.length} 輪`;
+
+      if (cycles.length === 0) {
+        listEl.innerHTML = '<div class="empty-hint" style="padding:12px 0;">執行「清存」後，每輪結算摘要將自動歸檔於此</div>';
+        return;
+      }
+
+      listEl.innerHTML = cycles.map((c, idx) => {
+        const rem = Number(c.remaining) || 0;
+        const cls = rem >= 0 ? 'income' : 'expense';
+        const remStr = (rem >= 0 ? '+' : '') + rem.toLocaleString() + ' 元';
+        const tag = rem > 0 ? '剩錢存入' : (rem < 0 ? '透支存錢' : '剛好歸零');
+        return `
+          <div class="cycle-archive-row">
+            <div>
+              <div class="cycle-archive-dates">第 ${cycles.length - idx} 輪・${c.startDate} ~ ${c.endDate}</div>
+              <div class="cycle-archive-meta">預算 ${Number(c.totalBudget || 0).toLocaleString()} / 支出 ${Number(c.totalExpense || 0).toLocaleString()}</div>
+            </div>
+            <div class="cycle-archive-rem ${cls}">
+              <div>${remStr}</div>
+              <div style="font-size:10.5px; font-weight:500; color:var(--muted);">${tag}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     // ========= 分類 & 支付方式 完整管理 =========

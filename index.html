@@ -2727,37 +2727,32 @@
 
     // ========= 5×4 計算機鍵盤邏輯 =========
     function openCalcKeyboard() {
-      if (unlockBelowTimer) {
-        clearTimeout(unlockBelowTimer);
-        unlockBelowTimer = null;
-      }
       const kb = document.getElementById('calc-keyboard');
       const amountBox = document.getElementById('amount-box');
-      const belowArea = document.getElementById('record-below-amount');
-
-      if (belowArea) belowArea.classList.add('calc-locked');
       amountBox.classList.add('calc-open');
       kb.classList.add('active');
       updateCalcDisplay();
     }
 
     function closeCalcKeyboard() {
-      if (hasPendingOperator(calcInput)) {
-        evaluateCurrentExpression();
-      }
       const kb = document.getElementById('calc-keyboard');
       const amountBox = document.getElementById('amount-box');
-      const belowArea = document.getElementById('record-below-amount');
-
+      if (!kb.classList.contains('active')) return;
       kb.classList.remove('active');
       amountBox.classList.remove('calc-open');
       updateCalcDisplay();
-
-      if (unlockBelowTimer) clearTimeout(unlockBelowTimer);
-      unlockBelowTimer = setTimeout(() => {
-        if (belowArea) belowArea.classList.remove('calc-locked');
-      }, 320);
     }
+
+    document.addEventListener('pointerdown', function(e) {
+      const kb = document.getElementById('calc-keyboard');
+      if (!kb || !kb.classList.contains('active')) return;
+      if (kb.contains(e.target)) return;
+      const amountBox = document.getElementById('amount-box');
+      if (amountBox && amountBox.contains(e.target)) return;
+      const modeSwitch = document.querySelector('#page-record .mode-switch');
+      if (modeSwitch && modeSwitch.contains(e.target)) return;
+      closeCalcKeyboard();
+    }, true);
 
     function hasPendingOperator(str) {
       return /[+\-×÷]/.test(String(str || ''));

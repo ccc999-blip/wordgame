@@ -914,12 +914,11 @@
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
-      transition: opacity 0.15s ease, transform 0.1s ease;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      will-change: transform;
     }
-    .history-search-btn:active {
-      opacity: 0.85;
-      transform: scale(0.94);
-    }
+
 
     .search-results-topbar {
       display: flex;
@@ -1008,7 +1007,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 1.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 1.2s cubic-bezier(0.22, 1, 0.36, 1);
       will-change: transform;
       touch-action: pan-y;
     }
@@ -1032,6 +1031,7 @@
       background-color: #EAE2D0 !important;
       box-shadow: inset 3px 0 0 var(--expense);
       border-radius: 0;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.24s ease, box-shadow 0.24s ease;
     }
     .log-item.highlight-jump.highlight-jump-first {
       border-top-left-radius: 6px;
@@ -1573,11 +1573,7 @@
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    .btn-sort-dir:active {
-      background: var(--surface-sub);
-      color: var(--text);
-      transform: scale(0.96);
-    }
+
     .stats-detail-scroll {
       flex: 1;
       overflow-y: auto;
@@ -2080,6 +2076,8 @@
 
     /* 全域 Apple 式阻尼按壓動態（涵蓋所有按鈕、膠囊、圖標、搜尋鍵、編輯與跳轉項目） */
     button,
+    .history-search-btn,
+    .btn-sort-dir,
     .today-spend-row,
     .piggy-bank-btn,
     .preset-chip,
@@ -2109,18 +2107,27 @@
       opacity: 0.86;
     }
     .history-search-btn:active,
-    .history-search-btn.is-pressed,
+    .history-search-btn.is-pressed {
+      transform: scale(0.80) !important;
+      opacity: 0.82;
+      transition: transform 0.11s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.11s ease !important;
+    }
     .history-search-clear:active,
     .history-search-clear.is-pressed,
     .btn-piggy-back:active,
     .btn-piggy-back.is-pressed,
+    .btn-sort-dir:active,
+    .btn-sort-dir.is-pressed,
     .btn-text-action:active,
     .btn-text-action.is-pressed,
     .btn-icon:active,
     .btn-icon.is-pressed {
       transform: scale(0.84) !important;
       opacity: 0.82;
+      transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.12s ease, opacity 0.12s ease !important;
     }
+    .btn-sort-dir:active,
+    .btn-sort-dir.is-pressed,
     .btn-text-action:active,
     .btn-text-action.is-pressed,
     .btn-icon:active,
@@ -4487,15 +4494,17 @@
 
     function executeWalletSearch() {
       const raw = document.getElementById('wallet-search-input').value.trim();
-      if (!raw) {
-        showAppAlert('請輸入要搜尋的文字、金額或日期');
-        return;
-      }
-      walletSearchState.active = true;
-      walletSearchState.query = raw;
-      walletSearchState.tab = '支出';
-      renderHistory();
-      window.scrollTo({ top: 0, behavior: 'auto' });
+      setTimeout(() => {
+        if (!raw) {
+          showAppAlert('請輸入要搜尋的文字、金額或日期');
+          return;
+        }
+        walletSearchState.active = true;
+        walletSearchState.query = raw;
+        walletSearchState.tab = '支出';
+        renderHistory();
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }, 150);
     }
 
     function resetSearchBarInput(scope) {
@@ -4519,16 +4528,18 @@
 
     function executePiggySearch() {
       const raw = document.getElementById('piggy-search-input').value.trim();
-      if (!raw) {
-        showAppAlert('請輸入要搜尋的文字、金額或日期');
-        return;
-      }
-      piggySearchState.active = true;
-      piggySearchState.query = raw;
-      piggySearchState.tab = '支出';
-      renderPiggyHistory();
-      const scrollBox = document.getElementById('piggy-scroll-body');
-      if (scrollBox) scrollBox.scrollTop = 0;
+      setTimeout(() => {
+        if (!raw) {
+          showAppAlert('請輸入要搜尋的文字、金額或日期');
+          return;
+        }
+        piggySearchState.active = true;
+        piggySearchState.query = raw;
+        piggySearchState.tab = '支出';
+        renderPiggyHistory();
+        const scrollBox = document.getElementById('piggy-scroll-body');
+        if (scrollBox) scrollBox.scrollTop = 0;
+      }, 150);
     }
 
     function exitPiggySearch() {
@@ -4575,8 +4586,11 @@
         if (idx === toHighlight.length - 1) el.classList.add('highlight-jump-last');
       });
       setTimeout(() => {
-        toHighlight.forEach(el => el.classList.remove('highlight-jump', 'highlight-jump-first', 'highlight-jump-last'));
-      }, 2400);
+        toHighlight.forEach(el => el.classList.remove('highlight-jump'));
+      }, 450);
+      setTimeout(() => {
+        toHighlight.forEach(el => el.classList.remove('highlight-jump-first', 'highlight-jump-last'));
+      }, 1650);
     }
 
     function jumpFromWalletSearchResult(logId) {
